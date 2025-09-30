@@ -1,0 +1,205 @@
+*{margin:0;padding:0;
+  font-family: __Pretendard_dc5901, __Pretendard_Fallback_dc5901;
+  overflow: hidden;
+}
+
+li{list-style: none; float: left;}
+a{text-decoration: none; color: inherit;display: block;}
+
+
+#root{
+  width: 100%;
+  height: 100vh;
+  min-height: 900px;
+}
+.MAIN_WRAPPER{
+  width: 100%;
+  height: 100%;
+}
+header{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 15%;
+  background-color: lightblue;
+}
+.logo{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 15%;
+  height: 100%;
+}
+nav{
+  flex: 1;
+  display: flex;
+  justify-content: space-evenly;
+  height: 100%;
+}
+.aside-ul>li,.header-ul>li{
+  position: relative;
+  color: #555;
+}
+.aside-ul>li::after,.header-ul>li::after{
+  content: "";
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: black;
+  position: absolute;
+  bottom: 0;left: 0;
+  transform: scaleX(0);
+  transition: all 1s 0s ease-in-out;
+}
+li.selected{
+  font-weight: 600;
+  color: #000;
+}
+.aside-ul>li.selected::after,.header-ul>li.selected::after{
+ transform: scaleX(1);
+}
+ul.header-ul{
+  width: 70%;
+  height: inherit ;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 70px;
+  font-size: 2.3rem;
+}
+
+ul.aside-ul{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  font-size: 25px;
+}
+
+
+
+
+
+.main_content{
+  display: flex;
+  width: 100%;
+  height: calc(100% - 15%);
+}
+.main_aside{
+  width: 15%;
+  height: 100%;
+  border-right: 1px solid;
+}
+.main_article{
+  width: 100%;
+}
+.main_body{
+  flex:1;
+  height: 100%;
+}
+.loginbtn{
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 2.3rem;
+}
+.gridbox{
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+}
+.grid{
+  width: 50%;
+  height: 50%;
+}
+
+/* List페이지 테이블 스타일링 세팅 */
+table{
+min-width: 800px;
+table-layout: fixed; 
+  width: 100%;
+  border-collapse: collapse;
+}
+th,td{
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+tr{
+  width: inherit;
+}
+thead{
+  width: calc(100% - 16px) !important;
+  height: 80px;
+  background-color: lightgray;
+}
+::-webkit-scrollbar{
+  display: block;
+}
+::-webkit-scrollbar-thumb{
+  display: block;
+  border-radius: 20px;
+  background-color: #7fd5ed;
+}
+th{
+  width: calc(100% / 8);
+  border:1px solid;
+  box-sizing: border-box;
+}
+tbody{
+  display: block;
+  max-height: 500px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+td{
+  border: 1px solid;
+  padding: 20px;
+  text-align: right;
+}
+thead,tbody tr{
+  display: table;
+  width: 100%;
+  height: 50px;
+  table-layout: fixed;
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.modal-wrapper{
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 10px 40px;
+}

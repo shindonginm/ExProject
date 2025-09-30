@@ -1,0 +1,28 @@
+import axios_api from "./axios";
+import { BASE_URL } from "./config";
+
+const host = `${BASE_URL}/order`;
+
+// 전체 주문 조회
+export const getOrderList = async () => {
+  const res = await axios_api.get(host);
+  return res.data;
+};
+
+// 등록
+export const createOrderList = async (formData) => {
+  const res = await axios_api.post(host, formData);
+  return res.data;
+};
+
+// 수정
+export const updateOrderList = async (orderNo, formData) => {
+  const res = await axios_api.put(`${host}/${orderNo}`, formData);
+  return res.data;
+};
+
+// 삭제
+export const deleteOrderList = async (orderNo) => {
+  const res = await axios_api.delete(`${host}/${orderNo}`);
+  return res.data;
+};
