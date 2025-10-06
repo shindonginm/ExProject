@@ -59,35 +59,58 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
 
   // handleCreate: 새 항목 등록
   const handleCreate = async () => {
-    const payload = { ...formData }; // 폼 데이터를 그대로 사용
     try {
-      await api.create(payload); // ~~~ListPage.jsx 내부 const로 선언한 api의 create 호출 
-      alert("등록 완료.")
-      setItems(await api.getAll()); // 등록 후 목록 다시 가져오기
-      setIsCreateOpen(false); // 등록 모달 창 닫아버리기
+      const created = await api.create(formData);
+
+      // api.getAll 있으면 서버에서 새 목록, 없으면 로컬에 추가
+      if (api && typeof api.getAll === "function") {
+        const list = await api.getAll();
+        setItems(list);
+      } else {
+        setItems(prev => [...prev, created]);
+      }
+
+      // UI 정리
+      setIsCreateOpen(false);   // 모달 닫기
       setFormData(initFormData()); // 폼 초기화
-    } catch (err) { 
-      alert("등록 에러 ! " , err)
-      console.log(payload)
-      console.error(err); // 오류 콘솔 출력
+      return true;
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message || "등록 중 에러";
+
+      alert(msg);
+      console.error(err);
+      // 얼럿은 훅에서 X . 호출한 페이지에서 ok 값 보고 처리
+      return false;
     }
   };
 
   // handleUpdate: 선택 항목 수정
   const handleUpdate = async () => {
   try {
-    await api.update(formData); // ~~~ListPage.jsx 내부 const로 선언한 api의 update 호출 
+    const payload = { ...selectedItem, ...formData };
+    const idKey = crudKey;    // "bomId"
+
+    if (!payload?.[idKey]) {
+      alert("ID가 없습니다 행을 클릭해 다시 시도하세요");
+      return false;
+    }
+    await api.update(payload);
+
     // 목록 상태 갱신: 수정된 항목만 업데이트
     setItems(prev => prev.map(item => 
-      item[crudKey] === formData[crudKey] ? { ...item, ...formData } : item
+      item[idKey] === formData[idKey] ? { ...item, ...payload } : item
     ));
-    alert("수정 완료.");
     setIsEditOpen(false); // 수정 모달 창 닫기
+    return true; // 성공 여부 반환
   } catch (err) { 
     const msg = err?.response?.data?.error || err?.message || "수정 중 에러";
     alert(`수정 실패 : ${msg}`);
-    console.error(err); 
-  }
+    console.error(err);
+    return false;
+    }
   };
 
   // handleDelete: 선택 항목 삭제
@@ -111,7 +134,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
 
   // openEdit: 수정 모드로 열기 (선택 항목 데이터를 폼에 넣음)
   const openEdit = (item) => {
-    setFormData(item);  // 폼 데이터 갱신
+    setFormData(prev => ({ ...initFormData(), ...item }));  // 폼 데이터 갱신
     setSelectedItem(item);  // 선택 항목 저장
     setIsEditOpen(true);    // 수정 창 열기
   };
@@ -120,7 +143,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
   const openCreate = () => {
     setFormData(initFormData());  // 폼초기화
     setIsCreateOpen(true);    // 등록 창 열기
-    setSelectedItem(null);    // 선택 항목 삭제
+        // 선택 항목 삭제
   };
   const closeCreate = () => setIsCreateOpen(false);
   const closeEdit = () => setIsEditOpen(false);
@@ -143,6 +166,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
     console.log("전송 데이터:", { customerId, itemId: itemListId, orderQty });
 
     await axios.post(host, {
+      
       customerId,
       itemId: itemListId,
       orderQty,
@@ -169,7 +193,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
     items,
     setItems,
     formData,
-    setFormData,
+    formData, setFormData,
     selectedItem,
     handleChange,
     handleCreate,

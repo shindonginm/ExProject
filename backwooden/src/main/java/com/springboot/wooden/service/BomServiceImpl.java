@@ -23,46 +23,28 @@ public class BomServiceImpl implements BomService {
     private final ItemRepository itemRepository;
     private final PartRepository partRepository;
 
-    // 목록 (Order와 같은 패턴: 트랜잭션 안에서 DTO 변환 완료)
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public List<BomResponseDto> getAll() {
-        return bomRepository.findAll()
-                .stream()
-                .map(b -> BomResponseDto.builder()
-                        .bomId(b.getBomId())                               // UI엔 안 보여줘도 조작용으로 필요
-                        .itemName(b.getItem().getItemName())               // 프론트 표시용 name
-                        .partName(b.getPart().getPartName())               // 프론트 표시용 name
-                        .qtyPerItem(b.getQtyPerItem())
-                        .build())
+        return bomRepository.findAll().stream()
+                .map(this::toDto)
                 .toList();
     }
 
-    // 단건
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public BomResponseDto getOne(Long bomId) {
         BOM b = bomRepository.findById(bomId)
                 .orElseThrow(() -> new EntityNotFoundException("BOM not found: " + bomId));
-
-        return BomResponseDto.builder()
-                .bomId(b.getBomId())
-                .itemName(b.getItem().getItemName())
-                .partName(b.getPart().getPartName())
-                .qtyPerItem(b.getQtyPerItem())
-                .build();
+        return toDto(b);
     }
 
-    // 등록
-    @Override
     @Transactional
+    @Override
     public BomResponseDto create(BomRequestDto dto) {
-        if (dto.getQtyPerItem() == null || dto.getQtyPerItem() <= 0) {
-            throw new IllegalArgumentException("qtyPerItem must be > 0");
-        }
-        if (bomRepository.existsByItem_ItemNoAndPart_PartNo(dto.getItemNo(), dto.getPartNo())) {
+        if (dto.getQtyPerItem() <= 0) throw new IllegalArgumentException("qtyPerItem must be > 0");
+        if (bomRepository.existsByItem_ItemNoAndPart_PartNo(dto.getItemNo(), dto.getPartNo()))
             throw new IllegalStateException("이미 존재하는 BOM입니다. (itemNo=%d, partNo=%d)".formatted(dto.getItemNo(), dto.getPartNo()));
-        }
 
         Item item = itemRepository.findById(dto.getItemNo())
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + dto.getItemNo()));
@@ -75,18 +57,14 @@ public class BomServiceImpl implements BomService {
                 .qtyPerItem(dto.getQtyPerItem())
                 .build());
 
-        return BomResponseDto.builder()
-                .bomId(saved.getBomId())
-                .itemName(saved.getItem().getItemName())
-                .partName(saved.getPart().getPartName())
-                .qtyPerItem(saved.getQtyPerItem())
-                .build();
+        return toDto(saved);
     }
 
-    // 수정
-    @Override
     @Transactional
+    @Override
     public BomResponseDto update(Long bomId, BomRequestDto dto) {
+        if (dto.getQtyPerItem() <= 0) throw new IllegalArgumentException("qtyPerItem must be > 0");
+
         BOM b = bomRepository.findById(bomId)
                 .orElseThrow(() -> new EntityNotFoundException("BOM not found: " + bomId));
 
@@ -95,7 +73,6 @@ public class BomServiceImpl implements BomService {
         Part part = partRepository.findById(dto.getPartNo())
                 .orElseThrow(() -> new EntityNotFoundException("Part not found: " + dto.getPartNo()));
 
-        // 다른 레코드와의 (item, part) 유니크 충돌 방지
         bomRepository.findByItem_ItemNoAndPart_PartNo(dto.getItemNo(), dto.getPartNo())
                 .ifPresent(dup -> {
                     if (!dup.getBomId().equals(bomId)) {
@@ -103,11 +80,23 @@ public class BomServiceImpl implements BomService {
                     }
                 });
 
-        // 도메인 메서드로 변경
         b.changeItem(item);
         b.changePart(part);
         b.changeQtyPerItem(dto.getQtyPerItem());
 
+        return toDto(b);
+    }
+
+    @Transactional
+    @Override
+    public void delete(Long bomId) {
+        if (!bomRepository.existsById(bomId)) {
+            throw new EntityNotFoundException("BOM not found: " + bomId);
+        }
+        bomRepository.deleteById(bomId);
+    }
+
+    private BomResponseDto toDto(BOM b) {
         return BomResponseDto.builder()
                 .bomId(b.getBomId())
                 .itemName(b.getItem().getItemName())
@@ -115,14 +104,7 @@ public class BomServiceImpl implements BomService {
                 .qtyPerItem(b.getQtyPerItem())
                 .build();
     }
-
-    // 삭제
-    @Override
-    @Transactional
-    public void delete(Long bomId) {
-        if (!bomRepository.existsById(bomId)) {
-            throw new EntityNotFoundException("BOM not found: " + bomId);
-        }
-        bomRepository.deleteById(bomId);
-    }
 }
+
+
+

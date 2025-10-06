@@ -18,4 +18,7 @@ public interface BOMRepository extends JpaRepository<BOM, Long> {
 
     boolean existsByItem_ItemNoAndPart_PartNo(Long itemNo, Long partNo);
     Optional<BOM> findByItem_ItemNoAndPart_PartNo(Long itemNo, Long partNo);
+
+    @EntityGraph(attributePaths = {"item", "part"})
+    List<BOM> findAllByItem_ItemNo(Long itemNo);
 }

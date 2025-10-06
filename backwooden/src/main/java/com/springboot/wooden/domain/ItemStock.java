@@ -1,13 +1,10 @@
 package com.springboot.wooden.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Table(name ="ITEM_STOCK_TBL")
+@Table(name = "ITEM_STOCK_TBL")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -15,18 +12,25 @@ import lombok.NoArgsConstructor;
 public class ItemStock {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "is_no")
-    private Long isNo; // PK는 컬럼명에 맞춰 isNo로
+    private Long isNo;  // 공유 PK (== Item.itemNo)
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "item_no", nullable = false, unique = true)
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "is_no")
     private Item item;
 
     @Column(name = "is_qty", nullable = false)
-    private int isQty;
+    private Integer isQty;
 
-    // 수량 증감 메서드
-    public void increase(int delta){ this.isQty += delta; }
-    public void decrease(int delta){ this.isQty -= delta; }
+    @Version
+    private Long version;
+
+    public void changeQty(int delta) {
+        int next = this.isQty + delta;
+        if (next < 0) {
+            throw new IllegalStateException("재고가 음수가 될 수 없습니다. 현재=" + isQty + ", 요청=" + delta);
+        }
+        this.isQty = next;
+    }
 }

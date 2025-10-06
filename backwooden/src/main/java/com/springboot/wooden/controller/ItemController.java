@@ -29,10 +29,10 @@ public class ItemController {
         return service.getOne(itemNo);
     }
 
-    // 추가
+    // 등록
     @PostMapping
     public ResponseEntity<ItemResponseDto> create(@RequestBody @Valid ItemRequestDto dto) {
-        return ResponseEntity.ok(service.save(dto));
+        return ResponseEntity.ok(service.create(dto));
     }
 
     // 수정

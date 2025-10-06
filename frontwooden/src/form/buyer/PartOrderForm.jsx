@@ -1,38 +1,101 @@
+import React from "react";
 
-import { partOrderArrays } from "../../arrays/partOrderArrays";
-
-
-const PartOrderForm = ({ formData, onClose, onSubmit,onChange }) => {
- 
-   
+const PartOrderForm = ({
+  formData,
+  onChange,
+  buyerOptions = [],
+  onSelectBuyer, 
+}) => {
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    onChange({ target: { name, value } });
+  };
 
   return (
-    <div className="form-wrapper">
-      {partOrderArrays.slice(1).map((data, idx) => (
-        <div className="form-content" key={idx}>
-          <p>
-            <span className="form-child">{data.content}</span>
-            { data.id === 6 ? (
-            <select id=""
-            name={data.clmn}
-            value={formData.poState || ""}
-            onChange={onChange}>
-              <option value="입고대기">입고대기</option>
-              <option value="입고완료">입고완료</option>
-              <option value="납품대기">납품대기</option>
-              <option value="납품완료">납품완료</option>
-            </select>
-            ):(<input
-              type={data.input}
-              name={data.clmn}
-              value={formData[data.clmn] || ""}
-              onChange={onChange}
-            />)}
-            
-          </p>
-        </div>
-      ))}
-      
+    <div className="form-wrapper" style={{ display: "grid", gap: 12 }}>
+      <label>
+        구매처명
+        <select
+          name="buyerNo"
+          value={formData.buyerNo ?? ""}
+          onChange={(e) => onSelectBuyer(Number(e.target.value))}
+          required
+        >
+          <option value="">-- 선택 --</option>
+          {buyerOptions.map((b) => (
+            <option key={b.value} value={b.value}>{b.label}</option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        구매처주소
+        <input
+          type="text"
+          name="buyerAddr"
+          value={formData.buyerAddr ?? ""}
+          readOnly
+          placeholder="구매처 선택 시 자동 입력"
+        />
+      </label>
+
+      <label>
+        부품명
+        <input
+          type="text"
+          name="partName"
+          value={formData.partName ?? ""}
+          readOnly
+          placeholder="구매처 선택 시 자동 입력"
+        />
+      </label>
+
+      <input type="hidden" name="partNo" value={formData.partNo ?? ""} />
+
+      <label>
+        구매단가
+        <input
+          type="number"
+          name="poPrice"
+          value={formData.poPrice ?? ""}
+          readOnly
+          placeholder="부품 자동 선택 시 자동 입력"
+        />
+      </label>
+
+      <label>
+        구매수량
+        <input
+          type="number"
+          name="poQty"
+          value={formData.poQty ?? ""}
+          onChange={handleInput}
+          min={1}
+          required
+        />
+      </label>
+
+      <label>
+        구매상태
+        <select
+          name="poState"
+          value={formData.poState ?? "입고대기"}
+          onChange={handleInput}
+        >
+          <option value="입고대기">입고대기</option>
+          <option value="입고완료">입고완료</option>
+        </select>
+      </label>
+
+      <label>
+        입고일자
+        <input
+          type="date"
+          name="poDate"
+          value={formData.poDate ?? ""}
+          onChange={handleInput}
+        />
+      </label>
     </div>
   );
 };

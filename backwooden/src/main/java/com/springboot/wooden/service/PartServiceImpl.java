@@ -38,23 +38,6 @@ public class PartServiceImpl implements PartService {
                 .toList();
     }
 
-    // 단건
-    @Override
-    @Transactional(readOnly = true)
-    public PartResponseDto getOne(Long partNo) {
-        Part p = partRepository.findById(partNo)
-                .orElseThrow(() -> new EntityNotFoundException("Part not found: " + partNo));
-        return PartResponseDto.builder()
-                .partNo(p.getPartNo())
-                .partCode(p.getPartCode())
-                .partName(p.getPartName())
-                .partSpec(p.getPartSpec())
-                .partPrice(p.getPartPrice())
-                .buyerComp(p.getBuyer().getBuyerComp())
-                .build();
-    }
-
-
     // 구매처 기준 단건(1:1)
     @Override
     @Transactional(readOnly = true)

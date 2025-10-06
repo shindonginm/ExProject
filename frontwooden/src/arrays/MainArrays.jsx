@@ -17,8 +17,9 @@ export const OrderList = [
     {id:3, name:"BOM",path:"plan/bom"}
   ]
   export const StockList = [
-    {id :1, name:"생산완료재고",path:"stock/stocklist"},
-    {id :2, name:"실제판매수량",path:"stock/sellamount"},
+    {id :1, name:"생산완료재고",path:"stock/itemstock"},
+    { id: 2, name: "입고완료재고",   path: "stock/partstock" },
+    {id :3, name:"실제판매수량",path:"stock/sellamount"},
   ]
 
 

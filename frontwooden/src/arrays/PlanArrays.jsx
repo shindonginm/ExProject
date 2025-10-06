@@ -7,14 +7,3 @@ export const PlanListArrays = [
   { id: 4, clmn: "planStartDate",  content: "생산시작일",  input: "date" },
   { id: 5, clmn: "planEndDate",    content: "생산종료일",  input: "date" },
 ];
-
-// 폼 초기값
-export const initPlanForm = () => ({
-  planNo: null,
-  itemNo: "",       // ✅ 서버 전송용 (select value)
-  itemName: "",     // 화면 표시용
-  planQty: 1,
-  planState: "생산중",
-  planStartDate: "",
-  planEndDate: "",
-});

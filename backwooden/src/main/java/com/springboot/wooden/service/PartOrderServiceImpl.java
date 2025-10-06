@@ -8,6 +8,7 @@ import com.springboot.wooden.dto.PartOrderResponseDto;
 import com.springboot.wooden.repository.BuyerRepository;
 import com.springboot.wooden.repository.PartOrderRepository;
 import com.springboot.wooden.repository.PartRepository;
+import com.springboot.wooden.repository.PartStockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,44 +23,26 @@ public class PartOrderServiceImpl implements PartOrderService {
     private final PartOrderRepository partOrderRepository;
     private final BuyerRepository buyerRepository;
     private final PartRepository partRepository;
+    private final PartStockRepository partStockRepository;
 
-    // 전체 조회
     @Override
     public List<PartOrderResponseDto> getAll() {
-        return partOrderRepository.findAll()
-                .stream()
-                .map(po -> PartOrderResponseDto.builder()
-                        .poNo(po.getPoNo())
-                        .buyerComp(po.getBuyer().getBuyerComp())
-                        .partName(po.getPart().getPartName())
-                        .poQty(po.getPoQty())
-                        .poPrice(po.getPoPrice())
-                        .poState(po.getPoState())
-                        .poDate(po.getPoDate())
-                        .buyerAddr(po.getBuyerAddr())
-                        .build())
-                .toList();
+        return partOrderRepository.findByPoStateNot("입고완료")
+                .stream().map(this::toDto).toList();
     }
 
-    // 단건 조회
+    public List<PartOrderResponseDto> getCompletedList() {
+        return partOrderRepository.findByPoState("입고완료")
+                .stream().map(this::toDto).toList();
+    }
+
     @Override
     public PartOrderResponseDto getOne(Long poNo) {
         PartOrder po = partOrderRepository.findById(poNo)
                 .orElseThrow(() -> new IllegalArgumentException("발주 없음: " + poNo));
-
-        return PartOrderResponseDto.builder()
-                .poNo(po.getPoNo())
-                .buyerComp(po.getBuyer().getBuyerComp())
-                .partName(po.getPart().getPartName())
-                .poQty(po.getPoQty())
-                .poPrice(po.getPoPrice())
-                .poState(po.getPoState())
-                .poDate(po.getPoDate())
-                .buyerAddr(po.getBuyerAddr())
-                .build();
+        return toDto(po);
     }
 
-    // 등록
     @Override
     @Transactional
     public PartOrderResponseDto addPartOrder(PartOrderRequestDto dto) {
@@ -69,28 +52,18 @@ public class PartOrderServiceImpl implements PartOrderService {
                 .orElseThrow(() -> new IllegalArgumentException("부품 없음: " + dto.getPartNo()));
 
         PartOrder saved = partOrderRepository.save(PartOrder.builder()
-                .buyer(buyer)                  // ★ save 전에 연관 세팅
+                .buyer(buyer)
                 .part(part)
                 .poQty(dto.getPoQty())
                 .poPrice(dto.getPoPrice())
                 .poState(dto.getPoState())
-                .poDate(dto.getPoDate())
+                .poDate(dto.getPoDate())      // 우리는 poDate = 입고일자로 사용
                 .buyerAddr(dto.getBuyerAddr())
                 .build());
 
-        return PartOrderResponseDto.builder()
-                .poNo(saved.getPoNo())
-                .buyerComp(saved.getBuyer().getBuyerComp())
-                .partName(saved.getPart().getPartName())
-                .poQty(saved.getPoQty())
-                .poPrice(saved.getPoPrice())
-                .poState(saved.getPoState())
-                .poDate(saved.getPoDate())
-                .buyerAddr(saved.getBuyerAddr())
-                .build();
+        return toDto(saved);
     }
 
-    // 수정
     @Override
     @Transactional
     public PartOrderResponseDto updatePartOrder(Long poNo, PartOrderRequestDto dto) {
@@ -102,14 +75,48 @@ public class PartOrderServiceImpl implements PartOrderService {
         Part part = partRepository.findById(dto.getPartNo())
                 .orElseThrow(() -> new IllegalArgumentException("부품 없음: " + dto.getPartNo()));
 
+        String before = po.getPoState();
+        String after  = dto.getPoState();
+
         po.changeBuyer(buyer);
         po.changePart(part);
         po.changePoQty(dto.getPoQty());
         po.changePoPrice(dto.getPoPrice());
-        po.changePoState(dto.getPoState());
-        po.changePoDate(dto.getPoDate());
+        po.changePoState(after);
+        po.changePoDate(dto.getPoDate());      // poDate = 입고일자
         po.changeBuyerAddr(dto.getBuyerAddr());
 
+        if (!"입고완료".equals(before) && "입고완료".equals(after)) {
+            var ps = getOrCreatePartStock(part);      // 없으면 생성해서 0부터 시작
+            ps.changeQty(+po.getPoQty());             // @Version이 있으면 낙관적락 적용됨
+
+            if (po.getPoDate() == null) {
+                po.changePoDate(java.time.LocalDate.now());
+            }
+        }
+        return toDto(po);
+    }
+
+    @Override
+    @Transactional
+    public void deletePartOrder(Long poNo) {
+        partOrderRepository.deleteById(poNo);
+    }
+
+    /** 재고행 없으면 0으로 생성 (공유PK = partNo) */
+    private com.springboot.wooden.domain.PartStock getOrCreatePartStock(Part part) {
+        Long partNo = part.getPartNo();
+        return partStockRepository.findById(partNo)
+                .orElseGet(() -> partStockRepository.save(
+                        com.springboot.wooden.domain.PartStock.builder()
+                                .psNo(partNo)
+                                .part(part)
+                                .psQty(0)
+                                .build()
+                ));
+    }
+
+    private PartOrderResponseDto toDto(PartOrder po) {
         return PartOrderResponseDto.builder()
                 .poNo(po.getPoNo())
                 .buyerComp(po.getBuyer().getBuyerComp())
@@ -120,12 +127,5 @@ public class PartOrderServiceImpl implements PartOrderService {
                 .poDate(po.getPoDate())
                 .buyerAddr(po.getBuyerAddr())
                 .build();
-    }
-
-    // 삭제
-    @Override
-    @Transactional
-    public void deletePartOrder(Long poNo) {
-        partOrderRepository.deleteById(poNo);
     }
 }

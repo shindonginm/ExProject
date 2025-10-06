@@ -1,7 +1,7 @@
 
 
   import { useEffect } from "react";
-  import { useCRUD } from "../../hook/useCRUD.jsx";
+  import { useCRUD } from "../../hook/useCRUD";
   import { getItemList, createItemList, updateItemList, deleteItemList } from "../../api/ItemListAPI"; // src/api/각자맡은부분API.jsx import해서 CRUD기능들을 모두 가져옴
   import ModalComponent from "../../components/ModalComponent";
   import ItemListForm from "../../form/plan/ItemListForm.jsx";
@@ -56,6 +56,8 @@
       }
       fetchData();    // 위에서 선언한 비동기 함수인 fetchData를 실행한다.
     },[])
+
+    
     return (        // react의 화면을 렌더링하는 return부분
       <div className="page-wrapper">  {/* className="page-wrapper"(변경 XX) > 각자 페이지에 padding으로 여백을 조정하게 함*/}
         <BackButtonComponent text="< &nbsp;이전페이지" onClick={() => navigate(-1)} /> {/*이전페이지 버튼 사용*/}

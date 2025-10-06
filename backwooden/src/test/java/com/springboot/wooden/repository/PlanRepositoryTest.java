@@ -33,7 +33,7 @@ class PlanRepositoryTest {
         Plan plan = Plan.builder()
                 .item(item)                      // ★ FK 세팅
                 .planQty(100)
-                .planState("SCHEDULED")
+                .planState("생산중")
                 .planStartDate(LocalDate.now())
                 .planEndDate(LocalDate.now().plusDays(7))
                 .build();

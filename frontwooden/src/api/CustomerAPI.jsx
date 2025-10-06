@@ -1,7 +1,6 @@
 import axios_api from "./axios";
-import { BASE_URL } from "./config";
 
-const host = `${BASE_URL}/order/sellercustomer`;
+const host = `/order/sellercustomer`;
 
 // 전체 조회
 export const getCustomer = async () => {

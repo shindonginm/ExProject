@@ -18,11 +18,8 @@ public interface PartService {
     // 삭제
     void delete(Long partNo);
 
-    // 조회
-    PartResponseDto getOne(Long partNo);
     List<PartResponseDto> getAll();
 
-    // (선택) Buyer 기준 조회: 1:1이면 유용
     PartResponseDto getByBuyerNo(Long buyerNo);
 
 }

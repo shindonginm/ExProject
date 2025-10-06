@@ -23,12 +23,6 @@ public class PartController {
         return partService.getAll();
     }
 
-    // 단건: GET /api/buyer/partlist/{partNo}
-    @GetMapping("/{partNo}")
-    public PartResponseDto getOne(@PathVariable Long partNo) {
-        return partService.getOne(partNo);
-    }
-
     // 구매처 기준 단건(1:1): GET /api/buyer/partlist/buyer/{buyerNo}
     @GetMapping("/buyer/{buyerNo}")
     public PartResponseDto getByBuyer(@PathVariable Long buyerNo) {
