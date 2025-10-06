@@ -17,14 +17,15 @@ const OrderListForm = ({
 
     if (selectedItem) {
       setItemListId(itemId);
-
       // itemId 업데이트
       onChange({ target: { name: "itemId", value: itemId } });
-
       // 단가(orderPrice) 자동 입력
       onChange({ target: { name: "orderPrice", value: selectedItem.price } });
     }
   };
+  // 총 금액
+  const computedTotal =
+    Number(formData.orderQty || 0) * Number(formData.orderPrice || 0);
 
   return (
     <div className="form-wrapper">
@@ -86,6 +87,13 @@ const OrderListForm = ({
                 <option value="납품대기">납품대기</option>
                 <option value="납품완료">납품완료</option>
               </select>
+            ) : data.clmn === "totalPrice" ? (
+              // 총 금액 = 수량 X 단가 (화면단 표시만)
+              <input
+                name="totalPrice"
+                readOnly
+                value={String(computedTotal)}
+              />
             ) : (
               /* 🔽 기본 input */
               <input

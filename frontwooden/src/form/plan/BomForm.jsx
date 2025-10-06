@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 
 const BomForm = ({
   formData,              // { bomId?, itemNo, partNo, qtyPerItem }

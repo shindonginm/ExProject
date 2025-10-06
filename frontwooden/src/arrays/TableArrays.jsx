@@ -6,13 +6,13 @@
 export const initForms = {
   // 판매거래처 > /order/sellercustomer
     sellerCustomer: {   // 폼 초기화 데이터 배열
-    cusNo: "",      // springboot에서 생성한 ResponseDTO파일의 필드변수명들을 여기에 적어야함. (다르면 무조건 오류)
-    cusComp: "",   // 예시 : private Long poNo; 등등 .... 
-    cusName: "",
-    cusEmail: "",
-    cusPhone: "",
-    cusAddr: "",
-  },
+      cusNo: "",      // springboot에서 생성한 ResponseDTO파일의 필드변수명들을 여기에 적어야함. (다르면 무조건 오류)
+      cusComp: "",   // 예시 : private Long poNo; 등등 .... 
+      cusName: "",
+      cusEmail: "",
+      cusPhone: "",
+      cusAddr: "",
+    },
   // 상품주문서 > /order/orderlist
   orderList: {
     orderNo: "",
@@ -68,11 +68,29 @@ export const initForms = {
   // 생산리스트 > /plan/planlist
   plan : {
     planNo: "",
+    itemNo: "",
     itemName: "",
     planQty: "",
-    planState: "",
+    planState: "진행중",
     planStartDate: "",
     planEndDate: "",
+  },
+  bom: {
+    bomId: "",
+    itemNo: "",
+    partNo: "",
+    qtyPerItem: "", 
+  },
+  itemStock: {
+    isNo: "",
+    itemName: "",
+    isQty: "",
+  },
+
+  partStock: {
+    psNo: "",
+    partName: "",
+    psQty: "",
   },
   
 };

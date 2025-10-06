@@ -2,9 +2,9 @@ package com.springboot.wooden.controller;
 
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
+import com.springboot.wooden.dto.OrderStatusUpdateDto;
 import com.springboot.wooden.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,6 +44,20 @@ public class OrderController {
             @PathVariable Long orderNo,
             @RequestBody OrderRequestDto dto) {
         return orderService.update(orderNo, dto);
+    }
+
+    // 상태 변경
+    @PatchMapping("/{id}/status")
+    public OrderResponseDto patchStatus(
+            @PathVariable Long id,
+            @RequestBody OrderStatusUpdateDto dto) {
+        return orderService.updateStatus(id, dto);
+    }
+
+    // 상태 완료 목록 (경로 중복 제거!)
+    @GetMapping("/completed")
+    public List<OrderResponseDto> completed() {
+        return orderService.getCompletedOrders();
     }
 
     // 주문 삭제

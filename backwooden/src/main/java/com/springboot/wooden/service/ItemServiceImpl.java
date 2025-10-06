@@ -1,104 +1,95 @@
+// service/ItemServiceImpl.java
 package com.springboot.wooden.service;
 
 import com.springboot.wooden.domain.Item;
+import com.springboot.wooden.domain.ItemStock;
 import com.springboot.wooden.dto.ItemRequestDto;
 import com.springboot.wooden.dto.ItemResponseDto;
 import com.springboot.wooden.repository.ItemRepository;
+import com.springboot.wooden.repository.ItemStockRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
 
-    private final ItemRepository repository;
+    private final ItemRepository itemRepository;
+    private final ItemStockRepository itemStockRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemResponseDto> getAll() {
-        return repository.findAll().stream()
-                .map(i -> ItemResponseDto.builder()
-                        .itemNo(i.getItemNo())
-                        .itemCode(i.getItemCode())
-                        .itemName(i.getItemName())
-                        .itemSpec(i.getItemSpec())
-                        .itemPrice(i.getItemPrice())
-                        .build())
+        return itemRepository.findAll().stream()
+                .map(this::toDto)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ItemResponseDto getOne(Long itemNo) {
-        Item i = repository.findById(itemNo)
-                .orElseThrow(() -> new IllegalArgumentException("상품 없음: " + itemNo));
-
-        return ItemResponseDto.builder()
-                .itemNo(i.getItemNo())
-                .itemCode(i.getItemCode())
-                .itemName(i.getItemName())
-                .itemSpec(i.getItemSpec())
-                .itemPrice(i.getItemPrice())
-                .build();
-    }
-
-    @Override
-    public Optional<ItemResponseDto> getByName(String name) {
-        return repository.findByItemName(name)
-                .map(i -> ItemResponseDto.builder()
-                        .itemNo(i.getItemNo())
-                        .itemCode(i.getItemCode())
-                        .itemName(i.getItemName())
-                        .itemSpec(i.getItemSpec())
-                        .itemPrice(i.getItemPrice())
-                        .build());
+        Item it = itemRepository.findById(itemNo)
+                .orElseThrow(() -> new EntityNotFoundException("상품 없음: " + itemNo));
+        return toDto(it);
     }
 
     @Override
     @Transactional
-    public ItemResponseDto save(ItemRequestDto dto) {
-        Item saved = repository.save(Item.builder()
+    public ItemResponseDto create(ItemRequestDto dto) {
+        // 1) Item 저장
+        Item saved = itemRepository.save(Item.builder()
                 .itemCode(dto.getItemCode())
                 .itemName(dto.getItemName())
                 .itemSpec(dto.getItemSpec())
                 .itemPrice(dto.getItemPrice())
                 .build());
 
-        return ItemResponseDto.builder()
-                .itemNo(saved.getItemNo())
-                .itemCode(saved.getItemCode())
-                .itemName(saved.getItemName())
-                .itemSpec(saved.getItemSpec())
-                .itemPrice(saved.getItemPrice())
-                .build();
+        itemStockRepository.findById(saved.getItemNo())
+                .orElseGet(() -> itemStockRepository.save(
+                        ItemStock.builder()
+                                .item(saved)
+                                .isQty(0)
+                                .build()
+                ));
+
+        return toDto(saved);
     }
 
     @Override
     @Transactional
-    public ItemResponseDto update(Long id, ItemRequestDto dto) {
-        Item i = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("상품 없음: " + id));
+    public ItemResponseDto update(Long itemNo, ItemRequestDto dto) {
+        Item it = itemRepository.findById(itemNo)
+                .orElseThrow(() -> new EntityNotFoundException("상품 없음: " + itemNo));
 
-        i.changeItemCode(dto.getItemCode());
-        i.changeItemName(dto.getItemName());
-        i.changeItemSpec(dto.getItemSpec());
-        i.changeItemPrice(dto.getItemPrice());
+        it.changeItemCode(dto.getItemCode());
+        it.changeItemName(dto.getItemName());
+        it.changeItemSpec(dto.getItemSpec());
+        it.changeItemPrice(dto.getItemPrice());
 
-        return ItemResponseDto.builder()
-                .itemNo(i.getItemNo())
-                .itemCode(i.getItemCode())
-                .itemName(i.getItemName())
-                .itemSpec(i.getItemSpec())
-                .itemPrice(i.getItemPrice())
-                .build();
+        return toDto(it);
     }
 
     @Override
     @Transactional
-    public void delete(Long id) {
-        repository.deleteById(id);
+    public void delete(Long itemNo) {
+        // 1) 연결된 재고행이 있으면 삭제 금지
+        if (itemStockRepository.existsById(itemNo)) {
+            throw new IllegalStateException("해당 품목의 재고가 남아 있어 삭제할 수 없습니다. 먼저 재고를 삭제하세요.");
+        }
+        itemRepository.deleteById(itemNo);
+    }
+
+    private ItemResponseDto toDto(Item it) {
+        return ItemResponseDto.builder()
+                .itemNo(it.getItemNo())
+                .itemCode(it.getItemCode())
+                .itemName(it.getItemName())
+                .itemSpec(it.getItemSpec())
+                .itemPrice(it.getItemPrice())
+                .build();
     }
 }

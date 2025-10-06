@@ -28,7 +28,7 @@ public class Plan {
     @Column(name = "plan_qty", nullable = false)
     private int planQty;
     @Column(name = "plan_state", nullable = false)
-    private String planState; // boolean or string 둘중 하나 선택
+    private String planState;
     @Column(name = "plan_start_date", nullable = false)
     private LocalDate planStartDate;
     @Column(name = "plan_end_date", nullable = false)

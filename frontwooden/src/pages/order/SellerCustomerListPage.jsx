@@ -1,4 +1,3 @@
-// src/pages/order/SellerCustomerListPage.jsx
 import { useEffect } from "react";
 import { useCRUD } from "../../hook/useCRUD";
 import {
@@ -18,14 +17,13 @@ import { useNavigate } from "react-router-dom";
 const api = {
   getAll: getCustomer,
   create: createCustomer,
-  // 🔧 useCRUD.handleUpdate가 formData 통째로 넘기니까 여기서 래핑
   update: (formData) => updateCustomer(formData.cusNo, formData),
   delete: (cusNo) => deleteCustomer(cusNo),
 };
 
 const SellerCustomerListPage = () => {
   const navigate = useNavigate();
-
+ 
   const {
     items,            // 목록
     setItems,
@@ -62,14 +60,18 @@ const SellerCustomerListPage = () => {
       {/* 테이블 */}
       <table>
         <thead>
-          <tr>
+          <tr> 
             {sellCustomerArray.map(col => <th key={col.id}>{col.content}</th>)}
           </tr>
         </thead>
         <tbody>
           {items && items.length > 0 ? (
             items.map(row => (
-              <tr key={row.cusNo} className="row" onClick={() => openEdit(row)}>
+              <tr 
+              key={row.cusNo} 
+              className="row" 
+              onClick={() => openEdit(row)}
+              >
                 {sellCustomerArray.map(col => (
                   <td
                     key={col.id}
@@ -94,15 +96,18 @@ const SellerCustomerListPage = () => {
       <ButtonComponent onClick={openCreate} text="거래처 등록" cln="submit" />
 
       {/* 등록 모달 */}
-      <ModalComponent
-        isOpen={isCreateOpen}
-        onClose={closeCreate}
+      <ModalComponent isOpen={isCreateOpen}
+        onClose={closeCreate} 
+        // onClose(ModalComp.jsx에다가 프롭스를 전달할 명칭.) 
+        // = {closeCreate}
+        // (ModalComp.jsx안에서 필요한 이벤트를 
+        // 리스트 페이지(부모)에서 모달컴포넌트(자식)로 전달하는 역할.)
         title="거래처 등록"
         onConfirm={handleCreate}
       >
-        <SellCustomerForm formData={formData} onChange={handleChange} />
+        <SellCustomerForm 자식 formData={formData} onChange={handleChange} />
         <div className="btn-wrapper">
-          <ButtonComponent text="등록" onClick={handleCreate} cln="submit" />
+          <ButtonComponent 자섹 text="등록" onClick={handleCreate} cln="submit" />
         </div>
       </ModalComponent>
 

@@ -15,7 +15,7 @@ public class OrderResponseDto {
     private String itemName;      // Item.name
     private int orderQty;
     private int orderPrice;
-//    private int totalPrice;    // (계산 필드) = qty * price
+    private Long totalPrice;    // (계산 필드) = qty * price
     private String orderState;
     private String orderDeliState;
     private LocalDate deliveryDate;

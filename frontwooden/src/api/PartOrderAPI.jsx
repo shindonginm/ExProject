@@ -1,13 +1,17 @@
 import axios_api from "./axios";
-import { BASE_URL } from "./config";
 
-const host = `${BASE_URL}/buyer/partorder`;
+const host = `/buyer/partorder`;
 
 // 전체 발주 조회
 export const getPartOrders = async () => {
   const res = await axios_api.get(host);
   return res.data;
 };
+
+export const getCompletedPartOrders = async () => {
+  const { data } = await axios_api.get(`${host}/completed`);
+  return data;
+}; 
 
 // 등록
 export const createPartOrder = async (formData) => {

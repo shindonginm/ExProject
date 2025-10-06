@@ -5,6 +5,7 @@ import com.springboot.wooden.domain.Item;
 import com.springboot.wooden.domain.Order;
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
+import com.springboot.wooden.dto.OrderStatusUpdateDto;
 import com.springboot.wooden.repository.CustomerRepository;
 import com.springboot.wooden.repository.ItemRepository;
 import com.springboot.wooden.repository.OrderRepository;
@@ -22,39 +23,18 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerRepository customerRepository;
     private final ItemRepository itemRepository;
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getAllOrders() {
-
-        return orderRepository.findAll()
-                .stream()
-                .map(o -> OrderResponseDto.builder()
-                        .orderNo(o.getOrderNo())
-                        .cusComp(o.getCustomer().getCusComp())
-                        .itemName(o.getItem().getItemName())
-                        .orderQty(o.getOrderQty())
-                        .orderPrice(o.getOrderPrice())
-                        .orderState(o.getOrderState())
-                        .orderDeliState(o.getOrderDeliState())
-                        .deliveryDate(o.getDeliveryDate())
-                        .orderDate(o.getOrderDate())
-                        .cusAddr(o.getCusAddr())
-                        .build())
-                .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public OrderResponseDto getOne(Long orderNo) {
-        Order o = orderRepository.findById(orderNo)
-                .orElseThrow(() -> new IllegalArgumentException("주문번호 없음: " + orderNo));
+    private OrderResponseDto toDto(Order o) {
+        int qty   = Math.max(0, o.getOrderQty());
+        int price = Math.max(0, o.getOrderPrice());
+        long total = 1L * qty * price; // int 오버플로우 방지
 
         return OrderResponseDto.builder()
                 .orderNo(o.getOrderNo())
                 .cusComp(o.getCustomer().getCusComp())
                 .itemName(o.getItem().getItemName())
-                .orderQty(o.getOrderQty())
-                .orderPrice(o.getOrderPrice())
+                .orderQty(qty)
+                .orderPrice(price)
+                .totalPrice(total)                    // 항상 계산해서 내려줌
                 .orderState(o.getOrderState())
                 .orderDeliState(o.getOrderDeliState())
                 .deliveryDate(o.getDeliveryDate())
@@ -65,21 +45,29 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<OrderResponseDto> getAllOrders() {
+
+        return orderRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponseDto getOne(Long orderNo) {
+        Order o = orderRepository.findById(orderNo)
+                .orElseThrow(() -> new IllegalArgumentException("주문번호 없음: " + orderNo));
+
+        return toDto(o);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDto> getAllByCompany(String company) {
         return orderRepository.findAllByCustomer_CusComp(company)
                 .stream()
-                .map(o -> OrderResponseDto.builder()
-                        .orderNo(o.getOrderNo())
-                        .cusComp(o.getCustomer().getCusComp())
-                        .itemName(o.getItem().getItemName())
-                        .orderQty(o.getOrderQty())
-                        .orderPrice(o.getOrderPrice())
-                        .orderState(o.getOrderState())
-                        .orderDeliState(o.getOrderDeliState())
-                        .deliveryDate(o.getDeliveryDate())
-                        .orderDate(o.getOrderDate())
-                        .cusAddr(o.getCusAddr())
-                        .build())
+                .map(this::toDto)
                 .toList();
     }
 
@@ -103,18 +91,7 @@ public class OrderServiceImpl implements OrderService {
                 .cusAddr(dto.getCusAddr())
                 .build());
 
-        return OrderResponseDto.builder()
-                .orderNo(saved.getOrderNo())
-                .cusComp(saved.getCustomer().getCusComp())
-                .itemName(saved.getItem().getItemName())
-                .orderQty(saved.getOrderQty())
-                .orderPrice(saved.getOrderPrice())
-                .orderState(saved.getOrderState())
-                .orderDeliState(saved.getOrderDeliState())
-                .deliveryDate(saved.getDeliveryDate())
-                .orderDate(saved.getOrderDate())
-                .cusAddr(saved.getCusAddr())
-                .build();
+        return toDto(saved);
     }
 
     @Override
@@ -139,19 +116,30 @@ public class OrderServiceImpl implements OrderService {
         o.changeCusAddr(dto.getCusAddr());
         // 변경감지로 UPDATE 반영
 
-        return OrderResponseDto.builder()
-                .orderNo(o.getOrderNo())
-                .cusComp(o.getCustomer().getCusComp())
-                .itemName(o.getItem().getItemName())
-                .orderQty(o.getOrderQty())
-                .orderPrice(o.getOrderPrice())
-                .orderState(o.getOrderState())
-                .orderDeliState(o.getOrderDeliState())
-                .deliveryDate(o.getDeliveryDate())
-                .orderDate(o.getOrderDate())
-                .cusAddr(o.getCusAddr())
-                .build();
+        return toDto(o);
     }
+
+    // 상태 값 변경 Impl
+    @Override
+    @Transactional
+    public OrderResponseDto updateStatus(Long id, OrderStatusUpdateDto dto) {
+        Order o = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("주문번호 없음: " + id));
+
+        if (dto.getOrderState() != null)     o.changeOrderState(dto.getOrderState());
+        if (dto.getOrderDeliState() != null) o.changeOrderDeliState(dto.getOrderDeliState());
+
+        return toDto(o); // 공통 매퍼
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getCompletedOrders() {
+        return orderRepository
+                .findAllByOrderStateAndOrderDeliState("승인완료", "납품완료")
+                .stream().map(this::toDto).toList();
+    }
+
 
     @Override
     @Transactional

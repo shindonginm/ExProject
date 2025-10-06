@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCRUD } from "../../hook/useCRUD.jsx";
 
@@ -7,13 +7,15 @@ import ButtonComponent from "../../components/ButtonComponent.jsx";
 import BackButtonComponent from "../../components/BackButtonComponent.jsx";
 
 import PlanListForm from "../../form/plan/PlanListForm.jsx";
-import { PlanListArrays, initPlanForm } from "../../arrays/PlanArrays";
+import { PlanListArrays } from "../../arrays/PlanArrays"; 
+import { initForms } from "../../arrays/TableArrays.jsx";
+
 import { getPlanList, createPlan, updatePlan, deletePlan } from "../../api/PlanListAPI";
 import { getItemList } from "../../api/ItemListAPI";
 
 const api = {
   getAll: getPlanList,
-  create: createPlan,
+  create: createPlan,  // 내부에서 formData 그대로 보낼 경우 itemNo, planState 등 필드 일치 필요
   update: updatePlan,
   delete: deletePlan,
 };
@@ -25,7 +27,7 @@ const PlanListPage = () => {
     items: plans,
     setItems: setPlans,
     formData,
-    setFormData,       // ✅ 덮어쓰기 방지를 위해 필요
+    setFormData,
     handleChange,
     handleCreate,
     handleUpdate,
@@ -37,85 +39,110 @@ const PlanListPage = () => {
     closeCreate,
     closeEdit,
     selectedItem,
-    itemList,
-    setItemList,
   } = useCRUD({
-    initFormData: () => initPlanForm(),
+    initFormData: () => ({ ...initForms.plan }),
     api,
     keyField: "planNo",
   });
 
+  // 상품 드롭다운 옵션
+  const [itemOptions, setItemOptions] = useState([]);
+
   // 목록 로딩
   useEffect(() => {
     (async () => {
-      const data = await getPlanList();
-      setPlans(data);
+      try {
+        const data = await getPlanList();
+        setPlans(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("getPlanList failed:", e);
+        setPlans([]);
+      }
     })();
   }, [setPlans]);
 
   // 상품 옵션 로딩
   useEffect(() => {
     (async () => {
-      const items = await getItemList();
-      const options = items.map((it) => ({
-        value: Number(it.itemNo),
-        label: it.itemName,
-      }));
-      setItemList(options);
+      try {
+        const items = await getItemList();
+        const options = (items ?? []).map(it => ({
+          value: Number(it.itemNo),
+          label: it.itemName,
+        }));
+        setItemOptions(options);
+      } catch (e) {
+        console.error("getItemList failed:", e);
+        setItemOptions([]);
+      }
     })();
-  }, [setItemList]);
+  }, []);
 
-  // 편집 모달이 열릴 때에만 초기값 세팅 (❗️덮어쓰기 방지)
+  // 편집 모달 열릴 때에만 폼 초기값 세팅 (덮어쓰기 방지)
   useEffect(() => {
     if (!isEditOpen || !selectedItem) return;
 
-    // selectedItem에서 폼으로 필요한 필드만 추출
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       planNo: selectedItem.planNo ?? prev.planNo,
-      planName: selectedItem.planName ?? prev.planName,
-      planQty: selectedItem.planQty ?? prev.planQty,
-      planState: ["생산중", "완료"].includes(selectedItem.planState)
+      planQty: Number(selectedItem.planQty ?? prev.planQty ?? 1),
+      planState: ["진행중", "생산완료"].includes(selectedItem.planState)
         ? selectedItem.planState
-        : "생산중",
+        : "진행중",
+      planStartDate: selectedItem.planStartDate ?? prev.planStartDate,
+      planEndDate: selectedItem.planEndDate ?? prev.planEndDate,
       // itemName → itemNo 역매핑
       itemNo:
         prev.itemNo ||
-        (itemList.find((o) => o.label === selectedItem.itemName)?.value ?? ""),
+        (itemOptions.find(o => o.label === selectedItem.itemName)?.value ?? ""),
+      // 표시용
+      itemName: selectedItem.itemName ?? prev.itemName,
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditOpen, selectedItem, itemList, setFormData]);
+  }, [isEditOpen, selectedItem, itemOptions, setFormData]);
 
-  // ── 공통: 기본 제출/버블 막기 ──
+  // 기본 submit/버블 방지
   const stop = (e) => {
-    if (e?.preventDefault) e.preventDefault();
-    if (e?.stopPropagation) e.stopPropagation();
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
   };
 
-  const refetchPlans = async () => {
-    const fresh = await getPlanList();
-    setPlans(fresh);
+  // 재조회
+  const refetch = async () => {
+    try {
+      const fresh = await getPlanList();
+      setPlans(Array.isArray(fresh) ? fresh : []);
+    } catch (e) {
+      console.error("refetch failed:", e);
+      setPlans([]);
+    }
   };
 
+  // 등록/수정/삭제
   const doCreate = async (e) => {
     stop(e);
-    await handleCreate();
-    await refetchPlans();
-    closeCreate();
+    const ok = await handleCreate();
+    if (ok) {
+      await refetch();
+      closeCreate();
+    }
   };
 
   const doUpdate = async (e) => {
     stop(e);
-    await handleUpdate();
-    await refetchPlans();
-    closeEdit();
+    const ok = await handleUpdate();
+    if (ok) {
+      await refetch();
+      closeEdit();
+    }
   };
 
   const doDelete = async (e) => {
     stop(e);
-    await handleDelete();
-    await refetchPlans();
-    closeEdit();
+    const ok = await handleDelete();
+    if (ok) {
+      await refetch();
+      closeEdit();
+    }
   };
 
   return (
@@ -133,7 +160,7 @@ const PlanListPage = () => {
           </tr>
         </thead>
         <tbody>
-          {plans && plans.length > 0 ? (
+          {Array.isArray(plans) && plans.length > 0 ? (
             plans.map((row) => (
               <tr key={row.planNo} className="row" onClick={() => openEdit(row)}>
                 {PlanListArrays.map((col) => (
@@ -151,9 +178,7 @@ const PlanListPage = () => {
         </tbody>
       </table>
 
-      {/* 등록 버튼 */}
       <br />
-      {/* ❗ ButtonComponent는 공용이라 못 바꾼다고 하셨으니 type은 건드리지 않고 onClick만 사용 */}
       <ButtonComponent onClick={openCreate} text={"생산 등록"} cln="submit" />
 
       {/* 등록 모달 */}
@@ -167,7 +192,7 @@ const PlanListPage = () => {
           <PlanListForm
             formData={formData}
             onChange={handleChange}
-            itemList={itemList}
+            itemList={itemOptions} 
           />
           <div className="btn-wrapper">
             <ButtonComponent text={"등록"} onClick={doCreate} cln="submit" />
@@ -187,7 +212,7 @@ const PlanListPage = () => {
             <PlanListForm
               formData={formData}
               onChange={handleChange}
-              itemList={itemList}
+              itemList={itemOptions} 
             />
             <div className="btn-wrapper">
               <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />

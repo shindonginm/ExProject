@@ -1,7 +1,7 @@
 import './Modal.css';
 import CloseBtnComponent from './CloseBtnComponent';
 
-const ModalComponent = ({onClose,isOpen,onConfirm,title,children}) => {
+const ModalComponent = ({onClose,isOpen,title,children}) => {
     
     return(
         <div className={"modal"+ (isOpen ? " show":"")}>

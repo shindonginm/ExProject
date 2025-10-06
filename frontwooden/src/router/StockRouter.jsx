@@ -1,28 +1,45 @@
-import { lazy,Suspense } from "react";
+// src/router/StockRouter.jsx
+import { lazy, Suspense } from "react";
 import { Navigate } from "react-router-dom";
 
-const Loading = <div>Loading...</div>
+const Loading = <div>Loading...</div>;
 
-const StockListPage = lazy(() => import("../pages/stock/StockListPage"));
-const SellListPage = lazy(() => import("../pages/stock/SellListPage"))
+// ✅ lazy 로딩
+const ItemStockListPage = lazy(() => import("../pages/stock/ItemStockListPage"));
+const PartStockListPage = lazy(() => import("../pages/stock/PartStockListPage"));
+const SellListPage      = lazy(() => import("../pages/stock/SellListPage"));
 
 const StockRouter = () => {
-
-  return[
+  return [
     {
-      path:"",
-      element: <Navigate replace to = "stocklist"/>
+      path: "",
+      element: <Navigate replace to="itemstock" />,
     },
     {
-      path:"stocklist",
-      element:<Suspense fallback={Loading}><StockListPage/></Suspense>
+      path: "itemstock",
+      element: (
+        <Suspense fallback={Loading}>
+          <ItemStockListPage />
+        </Suspense>
+      ),
     },
     {
-      path:"sellamount",
-      element: <Suspense fallback={Loading}><SellListPage/></Suspense>
-    }
-  ]
-}
-  
+      path: "partstock",
+      element: (
+        <Suspense fallback={Loading}>
+          <PartStockListPage />
+        </Suspense>
+      ),
+    },
+    {
+      path: "sellamount",
+      element: (
+        <Suspense fallback={Loading}>
+          <SellListPage />
+        </Suspense>
+      ),
+    },
+  ];
+};
 
 export default StockRouter;

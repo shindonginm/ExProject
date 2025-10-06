@@ -21,6 +21,18 @@ export const updateOrderList = async (orderNo, formData) => {
   return res.data;
 };
 
+// 상태 값 변경
+export const updateOrderStatus = async (orderNo, patch) => {
+  const res = await axios_api.patch(`${BASE_URL}/order/${orderNo}/status`,patch);
+  return res.data;
+};
+
+// 상태 값 완료
+export const getCompletedOrders = async () => {
+  const res = await axios_api.get(`${BASE_URL}/order/completed`);
+  return res.data;
+}
+
 // 삭제
 export const deleteOrderList = async (orderNo) => {
   const res = await axios_api.delete(`${host}/${orderNo}`);

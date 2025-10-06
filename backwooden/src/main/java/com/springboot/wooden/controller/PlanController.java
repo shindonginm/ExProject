@@ -18,16 +18,14 @@ public class PlanController {
     private  final PlanService planService;
 
     @GetMapping
-    public List<PlanResponseDTO> getAllPlan() {
+    public List<PlanResponseDTO> list() {
         return planService.getAll();
     }
 
-    // 단건 조회
-    @GetMapping("/{planNo}")
-    public PlanResponseDTO getOne(@PathVariable Long planNo) {
-        return planService.getOne(planNo);
+    @GetMapping("/completed")
+    public List<PlanResponseDTO> completed() {
+        return planService.getCompletedList();
     }
-
 
     // 등록
     @PostMapping
@@ -36,7 +34,6 @@ public class PlanController {
         return ResponseEntity.ok(saved); // 생성 후 조회해서 DTO로 반환
     }
 
-    // 수정: PUT /api/plan/planlist/{planNo}
     @PutMapping("/{planNo}")
     public ResponseEntity<PlanResponseDTO> update(@PathVariable Long planNo,
                                                   @RequestBody @Valid PlanRequestDTO dto) {
@@ -44,7 +41,6 @@ public class PlanController {
         return ResponseEntity.ok(updated);
     }
 
-    // 삭제: DELETE /api/plan/planlist/{planNo}
     @DeleteMapping("/{planNo}")
     public ResponseEntity<Void> delete(@PathVariable Long planNo) {
         planService.delete(planNo);

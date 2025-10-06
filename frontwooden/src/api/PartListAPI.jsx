@@ -1,11 +1,16 @@
 import axios_api from "./axios";
 
-const HOST = "/api/buyer/partlist";
+const HOST = "/buyer/partlist";
 
 // 전체 조회
 export const getPartList = async () => {
   const res = await axios_api.get(HOST);
   return res.data;
+};
+
+export const getPartByBuyer = async (buyerNo) => {
+  const { data } = await axios_api.get(`${HOST}/buyer/${buyerNo}`);
+  return data;
 };
 
 // 등록

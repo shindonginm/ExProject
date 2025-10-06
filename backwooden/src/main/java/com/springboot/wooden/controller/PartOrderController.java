@@ -17,16 +17,14 @@ public class PartOrderController {
 
     private final PartOrderService partOrderService;
 
-    // 전체 발주 조회: GET /api/buyer/partorder
-    @GetMapping
+    @GetMapping                 // 미완료 목록 (입고완료 제외)
     public List<PartOrderResponseDto> getAllPartOrders() {
         return partOrderService.getAll();
     }
 
-    // 단건 조회: GET /api/buyer/partorder/{poNo}
-    @GetMapping("/{poNo}")
-    public PartOrderResponseDto getOne(@PathVariable Long poNo) {
-        return partOrderService.getOne(poNo);
+    @GetMapping("/completed")
+    public List<PartOrderResponseDto> getCompletedPartOrders() {
+        return partOrderService.getCompletedList();
     }
 
     // 발주 등록: POST /api/buyer/partorder

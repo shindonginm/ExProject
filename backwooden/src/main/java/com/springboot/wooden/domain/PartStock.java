@@ -11,21 +11,28 @@ import lombok.*;
 @AllArgsConstructor
 public class PartStock {
 
-    // 부품 재고 일련번호 (PK)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ps_no")
     private Long psNo;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "part_no", nullable = false, unique = true)
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "ps_no")
     private Part part;
 
-    // 수량
     @Column(name = "ps_qty", nullable = false)
-    private int psQty;
+    private Integer psQty;
 
-    // 도메인 메서드
-    public void increase(int delta) { this.psQty += delta; }
-    public void decrease(int delta) { this.psQty -= delta; }
+    @Version // ← 낙관적 락 버전 칼럼 (INT/BIGINT)
+    private Long version;
+
+    public void changeQty(int delta) {
+        int next = this.psQty + delta;
+        if (next < 0) {
+            throw new IllegalStateException(
+                    "재고가 음수가 될 수 없습니다. 현재=" + psQty + ", 요청=" + delta
+            );
+        }
+        this.psQty = next;
+    }
 }

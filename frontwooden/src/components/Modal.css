@@ -146,3 +146,7 @@ button:hover{
     bottom: 20px;
     right: 0px;
 }
+
+td select{
+    height: 30px;
+}

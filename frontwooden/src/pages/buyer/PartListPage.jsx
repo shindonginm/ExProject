@@ -14,7 +14,7 @@ import BackButtonComponent from "../../components/BackButtonComponent";
 import { initForms } from "../../arrays/TableArrays";
 import { useNavigate } from "react-router-dom";
 import { PartListArray } from "../../arrays/PartListArrays";
-import axios_api from "../../api/axios"; // ✅ axios_api 사용 (baseURL 일관)
+import axios_api from "../../api/axios"; // axios_api 사용 (baseURL 일관)
                                      // (직접 axios+BASE_URL 혼용 지양)
 
 const api = {
@@ -56,7 +56,7 @@ const PartListPage = () => {
   useEffect(() => {
     (async () => {
       // ✅ 구매처: /api/buyer/buyercustomer
-      const res = await axios_api.get("/api/buyer/buyercustomer");
+      const res = await axios_api.get("/buyer/buyercustomer");
       const options = res.data.map((t) => ({
         label: t.buyerComp,  // 구매처명
         value: t.buyerNo,    // buyerNo (FK)

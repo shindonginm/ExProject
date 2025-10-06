@@ -25,4 +25,8 @@ public interface PartOrderRepository extends JpaRepository<PartOrder, Long> {
     // 모든 발주 조회 (Buyer와 Part 정보 fetch)
     @EntityGraph(attributePaths = {"buyer", "part"})
     List<PartOrder> findAll();
+
+    // 미완료 목록 (입고완료 아닌 것들)
+    List<PartOrder> findByPoStateNot(String poState);
+
 }
