@@ -35,4 +35,9 @@ public class PartStock {
         }
         this.psQty = next;
     }
+
+    @PrePersist
+    public void initVersion(){
+        if(version == null ) version = 0L;
+    }
 }

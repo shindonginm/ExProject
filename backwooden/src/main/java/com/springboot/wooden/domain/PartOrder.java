@@ -18,13 +18,14 @@ public class PartOrder {
     @Column(name = "po_no")
     private Long poNo; // 발주 번호 (PK)
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "buyer_no", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "part_no", nullable = true)
+    private Part part;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "buyer_no", nullable = true)
     private Buyer buyer;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "part_no", nullable = false)
-    private Part part;
 
     @Column(name = "po_qty", nullable = false)
     private int poQty;   // 발주 수량
@@ -41,6 +42,12 @@ public class PartOrder {
     @Column(name = "buyer_addr", length = 100, nullable = false)
     private String buyerAddr; // 거래처 주소
 
+    @Column(name = "buyer_comp_snap")
+    private String buyerCompSnap;
+
+    @Column(name = "part_name_snap")
+    private String partNameSnap;
+
     // --- 변경 메서드 ---
     public void changeBuyer(Buyer buyer) { this.buyer = buyer; }
     public void changePart(Part part) { this.part = part; }
@@ -49,4 +56,6 @@ public class PartOrder {
     public void changePoState(String state) { this.poState = state; }
     public void changePoDate(LocalDate date) { this.poDate = date; }
     public void changeBuyerAddr(String addr) { this.buyerAddr = addr; }
+    public void changeBuyerCompSnap(String snap) { this.buyerCompSnap = snap; }
+    public void changePartNameSnap(String snap) { this.partNameSnap = snap; }
 }

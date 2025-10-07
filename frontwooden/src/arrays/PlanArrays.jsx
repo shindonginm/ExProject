@@ -3,7 +3,7 @@ export const PlanListArrays = [
   { id: 0, clmn: "planNo",         content: "생산번호" },
   { id: 1, clmn: "itemName",       content: "상품명",      input: "text" },   // 화면 표시용
   { id: 2, clmn: "planQty",        content: "생산수량",    input: "number" },
-  { id: 3, clmn: "planState",      content: "상태",        input: "text" , options: ["생산중","완료"]},   // 생산중, 완료
+  { id: 3, clmn: "planState",      content: "상태",        input: "text" , options: ["생산중","생산완료"]},   // 생산중, 완료
   { id: 4, clmn: "planStartDate",  content: "생산시작일",  input: "date" },
   { id: 5, clmn: "planEndDate",    content: "생산종료일",  input: "date" },
 ];

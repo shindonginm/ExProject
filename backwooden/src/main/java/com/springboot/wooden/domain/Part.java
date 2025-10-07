@@ -18,11 +18,11 @@ public class Part {
     private Long partNo;
 
     // Buyer와 1:1 매핑 (FK: buyer_no)
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(
             name = "buyer_no",           // PART_TBL에 생성될 FK 컬럼
             referencedColumnName = "buyer_no",
-            nullable = false,
+            nullable = true,
             unique = true                // 1:1 보장
     )
     private Buyer buyer;

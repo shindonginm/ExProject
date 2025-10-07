@@ -2,10 +2,10 @@ package com.springboot.wooden.service;
 
 import com.springboot.wooden.domain.Buyer;
 import com.springboot.wooden.domain.Part;
+import com.springboot.wooden.domain.PartStock;
 import com.springboot.wooden.dto.PartRequestDto;
 import com.springboot.wooden.dto.PartResponseDto;
-import com.springboot.wooden.repository.BuyerRepository;
-import com.springboot.wooden.repository.PartRepository;
+import com.springboot.wooden.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,9 @@ public class PartServiceImpl implements PartService {
 
     private final PartRepository partRepository;
     private final BuyerRepository buyerRepository;
+    private final PartStockRepository partStockRepository;
+    private final PartOrderRepository partOrderRepository;
+    private final BOMRepository bomRepository;
 
 
     // 목록
@@ -33,7 +36,7 @@ public class PartServiceImpl implements PartService {
                         .partName(p.getPartName())
                         .partSpec(p.getPartSpec())
                         .partPrice(p.getPartPrice())
-                        .buyerComp(p.getBuyer().getBuyerComp())
+                        .buyerComp(p.getBuyer() != null ? p.getBuyer().getBuyerComp() : null)
                         .build())
                 .toList();
     }
@@ -50,7 +53,7 @@ public class PartServiceImpl implements PartService {
                 .partName(p.getPartName())
                 .partSpec(p.getPartSpec())
                 .partPrice(p.getPartPrice())
-                .buyerComp(p.getBuyer().getBuyerComp())
+                .buyerComp(p.getBuyer() != null ? p.getBuyer().getBuyerComp() : null)
                 .build();
     }
 
@@ -74,13 +77,18 @@ public class PartServiceImpl implements PartService {
                 .partPrice(dto.getPartPrice())
                 .build());
 
+        partStockRepository.save(PartStock.builder()
+                .part(saved)
+                .psQty(0)
+                .build());
+
         return PartResponseDto.builder()
                 .partNo(saved.getPartNo())
                 .partCode(saved.getPartCode())
                 .partName(saved.getPartName())
                 .partSpec(saved.getPartSpec())
                 .partPrice(saved.getPartPrice())
-                .buyerComp(saved.getBuyer().getBuyerComp())
+                .buyerComp(saved.getBuyer() != null ? saved.getBuyer().getBuyerComp() : null)
                 .build();
     }
 
@@ -114,14 +122,30 @@ public class PartServiceImpl implements PartService {
                 .partName(part.getPartName())
                 .partSpec(part.getPartSpec())
                 .partPrice(part.getPartPrice())
-                .buyerComp(part.getBuyer().getBuyerComp())
+                .buyerComp(part.getBuyer() != null ? part.getBuyer().getBuyerComp() : null)
                 .build();
     }
 
-    // 삭제
     @Override
     @Transactional
     public void delete(Long partNo) {
+        // 1) 미완료 발주가 남아 있으면 금지
+        boolean hasPending = partOrderRepository
+                .existsByPart_PartNoAndPoStateNot(partNo, "입고완료");
+        if (hasPending) {
+            throw new IllegalStateException("이 부품의 '입고대기/진행' 발주가 있어 삭제할 수 없습니다.");
+        }
+
+        // 2) 발주에서 part FK 끊기
+        partOrderRepository.detachPartFromOrders(partNo);
+
+        // 3) BOM에서 이 부품을 참조하는 행 삭제
+        bomRepository.deleteByPartNo(partNo);
+
+        // 4) 재고행 삭제 (공유 PK = partNo)
+        partStockRepository.deleteById(partNo);
+
+        // 5) 부품 삭제
         partRepository.deleteById(partNo);
     }
 }
