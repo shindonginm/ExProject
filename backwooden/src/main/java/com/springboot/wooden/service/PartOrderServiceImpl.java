@@ -51,14 +51,24 @@ public class PartOrderServiceImpl implements PartOrderService {
         Part part = partRepository.findById(dto.getPartNo())
                 .orElseThrow(() -> new IllegalArgumentException("부품 없음: " + dto.getPartNo()));
 
+        if (!"입고대기".equals(dto.getPoState())) {
+            throw new IllegalArgumentException("등록은 '입고대기' 상태로만 가능합니다.");
+        }
+        if (dto.getPoDate() == null) {
+            throw new IllegalArgumentException("입고일자는 필수입니다.");
+        }
+
         PartOrder saved = partOrderRepository.save(PartOrder.builder()
                 .buyer(buyer)
                 .part(part)
                 .poQty(dto.getPoQty())
                 .poPrice(dto.getPoPrice())
                 .poState(dto.getPoState())
-                .poDate(dto.getPoDate())      // 우리는 poDate = 입고일자로 사용
+                .poDate(dto.getPoDate())
                 .buyerAddr(dto.getBuyerAddr())
+                // 🔽 스냅샷
+                .buyerCompSnap(buyer.getBuyerComp())
+                .partNameSnap(part.getPartName())
                 .build());
 
         return toDto(saved);
@@ -80,6 +90,8 @@ public class PartOrderServiceImpl implements PartOrderService {
 
         po.changeBuyer(buyer);
         po.changePart(part);
+        po.changeBuyerCompSnap(buyer != null ? buyer.getBuyerComp() : po.getBuyerCompSnap());
+        po.changePartNameSnap(part != null ? part.getPartName() : po.getPartNameSnap());
         po.changePoQty(dto.getPoQty());
         po.changePoPrice(dto.getPoPrice());
         po.changePoState(after);
@@ -117,10 +129,18 @@ public class PartOrderServiceImpl implements PartOrderService {
     }
 
     private PartOrderResponseDto toDto(PartOrder po) {
+        String buyerComp = (po.getBuyer() != null)
+                ? po.getBuyer().getBuyerComp()
+                : po.getBuyerCompSnap();
+
+        String partName = (po.getPart() != null)
+                ? po.getPart().getPartName()
+                : po.getPartNameSnap();
+
         return PartOrderResponseDto.builder()
                 .poNo(po.getPoNo())
-                .buyerComp(po.getBuyer().getBuyerComp())
-                .partName(po.getPart().getPartName())
+                .buyerComp(buyerComp)
+                .partName(partName)
                 .poQty(po.getPoQty())
                 .poPrice(po.getPoPrice())
                 .poState(po.getPoState())

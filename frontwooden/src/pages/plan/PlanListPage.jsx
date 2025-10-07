@@ -86,9 +86,9 @@ const PlanListPage = () => {
       ...prev,
       planNo: selectedItem.planNo ?? prev.planNo,
       planQty: Number(selectedItem.planQty ?? prev.planQty ?? 1),
-      planState: ["진행중", "생산완료"].includes(selectedItem.planState)
+      planState: ["생산중", "생산완료"].includes(selectedItem.planState)
         ? selectedItem.planState
-        : "진행중",
+        : "생산중",
       planStartDate: selectedItem.planStartDate ?? prev.planStartDate,
       planEndDate: selectedItem.planEndDate ?? prev.planEndDate,
       // itemName → itemNo 역매핑

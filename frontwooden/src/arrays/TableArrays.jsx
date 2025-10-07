@@ -71,7 +71,7 @@ export const initForms = {
     itemNo: "",
     itemName: "",
     planQty: "",
-    planState: "진행중",
+    planState: "생산중",
     planStartDate: "",
     planEndDate: "",
   },

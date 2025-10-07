@@ -1,3 +1,4 @@
+// src/pages/buyer/PartOrderListPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCRUD } from "../../hook/useCRUD.jsx";
@@ -18,7 +19,7 @@ import {
   deletePartOrder,
 } from "../../api/PartOrderAPI";
 import { getBuyerCustomer } from "../../api/BuyerListAPI";
-import { getPartList } from "../../api/PartListAPI";
+import { getPartByBuyer } from "../../api/PartListAPI"; // ✅ 추가 (구매처→부품 자동 세팅용)
 
 const api = {
   getAll: getPartOrders,
@@ -26,9 +27,9 @@ const api = {
     createPartOrder({
       poNo: fd.poNo ? Number(fd.poNo) : undefined,
       buyerNo: Number(fd.buyerNo),
-      partNo: Number(fd.partNo),
+      partNo: Number(fd.partNo),          // ✅ 자동 세팅된 값 전송
       poQty: Number(fd.poQty),
-      poPrice: Number(fd.poPrice),
+      poPrice: Number(fd.poPrice),        // ✅ 자동 세팅된 값 전송
       poState: fd.poState,
       poDate: fd.poDate || null,
       buyerAddr: fd.buyerAddr ?? "",
@@ -71,9 +72,8 @@ const PartOrderListPage = () => {
     keyField: "poNo",
   });
 
-  // 옵션 로딩
-  const [buyerOptions, setBuyerOptions] = useState([]); // {value: buyerNo, label: buyerComp, extra: buyerAddr}
-  const [partOptions, setPartOptions] = useState([]); // {value: partNo, label: partName, extra: partPrice}
+  // ✅ 구매처 옵션만 유지 (부품 옵션/드롭다운 제거)
+  const [buyerOptions, setBuyerOptions] = useState([]); // {value: buyerNo, label: buyerComp, addr: buyerAddr}
 
   useEffect(() => {
     (async () => {
@@ -83,56 +83,64 @@ const PartOrderListPage = () => {
           (buyers ?? []).map((b) => ({
             value: Number(b.buyerNo),
             label: b.buyerComp,
-            extra: b.buyerAddr,
-          }))
-        );
-        const parts = await getPartList(); // [{partNo,partName,partPrice,...}]
-        setPartOptions(
-          (parts ?? []).map((p) => ({
-            value: Number(p.partNo),
-            label: p.partName,
-            extra: Number(p.partPrice ?? 0),
+            addr: b.buyerAddr,
           }))
         );
       } catch (e) {
         console.error(e);
         setBuyerOptions([]);
-        setPartOptions([]);
       }
     })();
   }, []);
 
-  // 빠른 Lookup Map
+  // 빠른 Lookup Map (구매처)
   const buyerMap = useMemo(() => {
     const m = new Map();
     buyerOptions.forEach((b) => m.set(b.value, b));
     return m;
   }, [buyerOptions]);
 
-  const partMap = useMemo(() => {
-    const m = new Map();
-    partOptions.forEach((p) => m.set(p.value, p));
-    return m;
-  }, [partOptions]);
-
-  // 선택 핸들러: 구매처
-  const onSelectBuyer = (buyerNo) => {
+  // ✅ 구매처 선택 → 부품/단가/주소 자동 세팅
+  const onSelectBuyer = async (buyerNo) => {
     const opt = buyerMap.get(buyerNo);
+
+    // 우선 구매처 정보 반영
     setFormData((prev) => ({
       ...prev,
       buyerNo: buyerNo || "",
-      buyerAddr: opt?.extra ?? "",
+      buyerAddr: opt?.addr ?? "",
     }));
-  };
 
-  // 선택 핸들러: 부품
-  const onSelectPart = (partNo) => {
-    const opt = partMap.get(partNo);
-    setFormData((prev) => ({
-      ...prev,
-      partNo: partNo || "",
-      poPrice: opt?.extra ?? "", // 자동 입력
-    }));
+    // 구매처와 1:1인 부품 자동 조회
+    try {
+      if (!buyerNo) {
+        setFormData((prev) => ({
+          ...prev,
+          partNo: "",
+          partName: "",
+          poPrice: "",
+        }));
+        return;
+      }
+
+      const part = await getPartByBuyer(buyerNo); // { partNo, partName, partPrice, ... }
+      setFormData((prev) => ({
+        ...prev,
+        partNo: Number(part.partNo),
+        partName: part.partName,             // 폼에서 readOnly로 표기
+        poPrice: Number(part.partPrice ?? 0) // 단가 자동
+      }));
+    } catch (e) {
+      console.error("getPartByBuyer failed", e);
+      // 적절히 초기화
+      setFormData((prev) => ({
+        ...prev,
+        partNo: "",
+        partName: "",
+        poPrice: "",
+      }));
+      alert("해당 구매처에 연결된 부품을 찾을 수 없습니다.");
+    }
   };
 
   // 최초 목록 로딩
@@ -153,7 +161,7 @@ const PartOrderListPage = () => {
     setItems(Array.isArray(list) ? list : []);
   };
 
-  // 모달 열릴 때, 편집 모드면 기존 데이터 반영 (response는 buyerComp/partName이라 역매핑 필요할 수 있음)
+  // 편집 모달 열릴 때 기존 데이터 → 폼 반영 (buyerComp/partName 등 표시 컬럼을 역매핑)
   useEffect(() => {
     if (!isEditOpen || !selectedItem) return;
 
@@ -161,33 +169,24 @@ const PartOrderListPage = () => {
     const buyerNo =
       buyerOptions.find((b) => b.label === selectedItem.buyerComp)?.value ?? "";
 
-    // partName -> partNo 역매핑
-    const partNo =
-      partOptions.find((p) => p.label === selectedItem.partName)?.value ?? "";
-
     setFormData((prev) => ({
       ...prev,
       poNo: selectedItem.poNo,
       buyerNo,
-      buyerAddr: selectedItem.buyerAddr ?? buyerMap.get(buyerNo)?.extra ?? "",
-      partNo,
-      poPrice:
-        selectedItem.poPrice ??
-        partMap.get(partNo)?.extra ??
-        "",
+      buyerAddr: selectedItem.buyerAddr ?? buyerMap.get(buyerNo)?.addr ?? "",
+      partNo: "",                   // 아래 onSelectBuyer에서 자동 세팅될 예정
+      partName: selectedItem.partName ?? "",
+      poPrice: selectedItem.poPrice ?? "",
       poQty: selectedItem.poQty ?? "",
       poState: selectedItem.poState ?? "입고대기",
       poDate: selectedItem.poDate ?? "",
     }));
-  }, [
-    isEditOpen,
-    selectedItem,
-    setFormData,
-    buyerOptions,
-    partOptions,
-    buyerMap,
-    partMap,
-  ]);
+
+    // ✅ 편집 모달에서도 구매처 기반 부품/단가 동기화
+    if (buyerNo) {
+      onSelectBuyer(buyerNo);
+    }
+  }, [isEditOpen, selectedItem, setFormData, buyerOptions, buyerMap]); // onSelectBuyer는 안정적으로 호출
 
   // 기본 submit 막기
   const stop = (e) => {
@@ -249,9 +248,7 @@ const PartOrderListPage = () => {
             items.map((row) => (
               <tr key={row.poNo} className="row" onClick={() => openEdit(row)}>
                 {partOrderArrays.map((c) => (
-                  <td key={`${row.poNo}-${c.id}`}>
-                    {row[c.clmn] ?? ""}
-                  </td>
+                  <td key={`${row.poNo}-${c.id}`}>{row[c.clmn] ?? ""}</td>
                 ))}
               </tr>
             ))
@@ -280,9 +277,7 @@ const PartOrderListPage = () => {
             formData={formData}
             onChange={handleChange}
             buyerOptions={buyerOptions}
-            partOptions={partOptions}
-            onSelectBuyer={onSelectBuyer}
-            onSelectPart={onSelectPart}
+            onSelectBuyer={onSelectBuyer}   // ✅ 부품 자동 세팅은 여기서
           />
           <div className="btn-wrapper" style={{ marginTop: 12 }}>
             <ButtonComponent text="등록" onClick={doCreate} cln="submit" />
@@ -303,9 +298,7 @@ const PartOrderListPage = () => {
               formData={formData}
               onChange={handleChange}
               buyerOptions={buyerOptions}
-              partOptions={partOptions}
-              onSelectBuyer={onSelectBuyer}
-              onSelectPart={onSelectPart}
+              onSelectBuyer={onSelectBuyer} // ✅ 편집에서도 유지
             />
             <div className="btn-wrapper" style={{ marginTop: 12 }}>
               <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />

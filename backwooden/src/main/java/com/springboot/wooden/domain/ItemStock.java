@@ -33,4 +33,9 @@ public class ItemStock {
         }
         this.isQty = next;
     }
+
+    @PrePersist
+    public void initVersion(){
+        if(version == null ) version = 0L;
+    }
 }

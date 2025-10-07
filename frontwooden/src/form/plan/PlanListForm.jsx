@@ -37,7 +37,7 @@ const PlanListForm = ({ formData, onChange, itemList }) => {
   );
 
   const renderPlanStateSelect = () => {
-    const safe = ["생산중", "완료"].includes(formData.planState)
+    const safe = ["생산중", "생산완료"].includes(formData.planState)
       ? formData.planState
       : "생산중";
     return (
@@ -47,7 +47,7 @@ const PlanListForm = ({ formData, onChange, itemList }) => {
         onChange={handleChangeSmart}
       >
         <option value="생산중">생산중</option>
-        <option value="완료">완료</option>
+        <option value="생산완료">생산완료</option>
       </select>
     );
   };

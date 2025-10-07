@@ -24,6 +24,8 @@ public class PartOrderController {
 
     @GetMapping("/completed")
     public List<PartOrderResponseDto> getCompletedPartOrders() {
+        var list = partOrderService.getCompletedList();
+        System.out.println("[DEBUG] completed.size=" + list.size());
         return partOrderService.getCompletedList();
     }
 
