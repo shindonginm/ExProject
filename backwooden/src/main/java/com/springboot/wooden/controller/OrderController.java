@@ -1,5 +1,6 @@
 package com.springboot.wooden.controller;
 
+import com.springboot.wooden.dto.OrderListRow;
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
 import com.springboot.wooden.dto.OrderStatusUpdateDto;
@@ -20,6 +21,12 @@ public class OrderController {
     @GetMapping
     public List<OrderResponseDto> getOrders() {
         return orderService.getAllOrders();
+    }
+
+    // 스냅샷 기반 주문리스트
+    @GetMapping("/list")
+    public List<OrderListRow> getOrderList() {
+        return orderService.getOrderList(); // Repository의 findOrderListRows() 호출
     }
 
     @GetMapping("/{orderNo}")   // ✅ 단건은 orderNo로!

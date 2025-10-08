@@ -66,7 +66,7 @@ public class PartOrderServiceImpl implements PartOrderService {
                 .poState(dto.getPoState())
                 .poDate(dto.getPoDate())
                 .buyerAddr(dto.getBuyerAddr())
-                // 🔽 스냅샷
+                // 스냅샷
                 .buyerCompSnap(buyer.getBuyerComp())
                 .partNameSnap(part.getPartName())
                 .build());

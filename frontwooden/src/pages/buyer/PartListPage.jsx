@@ -128,7 +128,7 @@ const PartListPage = () => {
                   {part.partName}
                 </td>
 
-                <td>{part.buyerComp}</td>
+                <td>{part.buyerComp?.trim() || "구매처 지정 필요"}</td>
                 <td>{part.partCode}</td>
                 <td>{part.partSpec}</td>
                 <td>{part.partPrice}</td>
