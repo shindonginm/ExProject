@@ -26,37 +26,37 @@ public class ItemStockServiceImpl implements ItemStockService {
 
     @Override
     @Transactional(readOnly = true)
-    public ItemStockResponseDto getOne(Long isNo) {
-        ItemStock s = itemStockRepository.findById(isNo)
-                .orElseThrow(() -> new IllegalArgumentException("완제품 재고 없음: " + isNo));
+    public ItemStockResponseDto getOne(Long itemNo) {
+        ItemStock s = itemStockRepository.findById(itemNo)
+                .orElseThrow(() -> new IllegalArgumentException("완제품 재고 없음: " + itemNo));
         return toDto(s);
     }
 
     @Override
     @Transactional
     public ItemStockResponseDto adjust(ItemStockRequestDto request) {
-        if (request.getDelta() == null || request.getDelta() == 0) {
+        Integer delta = request.getDelta();
+        if (delta == null || delta == 0) {
             throw new IllegalArgumentException("delta는 0이 될 수 없습니다.");
         }
-        Long itemNo = request.getItemNo(); // 공유 PK = isNo
+
+        Long itemNo = request.getItemNo(); // 공유 PK(@MapsId) = Item.itemNo
         ItemStock s = itemStockRepository.findById(itemNo)
                 .orElseThrow(() -> new IllegalStateException("재고행 없음: itemNo=" + itemNo));
 
-        // 도메인 메서드로 수량 증감 (낙관적 락은 엔티티 @Version으로 적용)
-        s.changeQty(request.getDelta());
+        // 도메인 메서드로 수량 증감 (@Version으로 낙관적 락)
+        s.changeQty(delta);
 
         return toDto(s);
     }
 
     private ItemStockResponseDto toDto(ItemStock s) {
-        int qty = (s.getIsQty() == null) ? 0 : s.getIsQty();
-        String name = (s.getItem() != null) ? s.getItem().getItemName() : "(미지정)";
-        // 공유 PK(@MapsId) 구조라면 isNo = itemNo
-        Long isNo = (s.getIsNo() != null) ? s.getIsNo()
-                : (s.getItem() != null ? s.getItem().getItemNo() : null);
+        int qty = s.getIsQty();
+        String name = s.getItem().getItemName();
+        Long itemNo = s.getItemNo(); // PK=FK 하나로 통일
 
         return ItemStockResponseDto.builder()
-                .isNo(isNo)
+                .isNo(itemNo)     // 프론트 DTO 필드명이 isNo라면 그대로 채워줌
                 .itemName(name)
                 .isQty(qty)
                 .build();

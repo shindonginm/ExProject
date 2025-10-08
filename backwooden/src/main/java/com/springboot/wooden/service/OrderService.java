@@ -1,5 +1,6 @@
 package com.springboot.wooden.service;
 
+import com.springboot.wooden.dto.OrderListRow;
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
 import com.springboot.wooden.dto.OrderStatusUpdateDto;
@@ -14,5 +15,6 @@ public interface OrderService {
     OrderResponseDto update(Long id, OrderRequestDto dto);    // 수정
     OrderResponseDto updateStatus(Long id, OrderStatusUpdateDto dto);
     List<OrderResponseDto> getCompletedOrders();              // 상태 값 변경 후 이동
-    void delete(Long id);                                     // 삭제
+    void delete(Long id);// 삭제
+    List<OrderListRow> getOrderList();  // 🔹 추가
 }

@@ -3,6 +3,7 @@ package com.springboot.wooden.service;
 import com.springboot.wooden.domain.Customer;
 import com.springboot.wooden.domain.Item;
 import com.springboot.wooden.domain.Order;
+import com.springboot.wooden.dto.OrderListRow;
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
 import com.springboot.wooden.dto.OrderStatusUpdateDto;
@@ -145,5 +146,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void delete(Long id) {
         orderRepository.deleteById(id);
+    }
+
+    @Override
+    public List<OrderListRow> getOrderList() {
+        return orderRepository.findOrderListRows(); // ✅ Repository 호출
     }
 }

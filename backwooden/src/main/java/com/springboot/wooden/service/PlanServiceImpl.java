@@ -110,7 +110,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     @Transactional
     public PlanResponseDTO save(PlanRequestDTO dto) {
-        // ✅ 서비스 레벨 검증
+        // 서비스 레벨 검증
         validateDatesAndQty(dto);
 
         if (!"생산중".equals(dto.getPlanState())) {

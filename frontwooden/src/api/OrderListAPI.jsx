@@ -5,7 +5,7 @@ const host = `${BASE_URL}/order`;
 
 // 전체 주문 조회
 export const getOrderList = async () => {
-  const res = await axios_api.get(host);
+  const res = await axios_api.get(`${host}/list`);
   return res.data;
 };
 
