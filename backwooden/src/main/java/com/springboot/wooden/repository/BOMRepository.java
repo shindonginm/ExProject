@@ -28,7 +28,14 @@ public interface BOMRepository extends JpaRepository<BOM, Long> {
     // 이 부품을 쓰는 BOM 행이 존재하는가?
     boolean existsByPart_PartNo(Long partNo);
 
+    // part 기준 삭제
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from BOM b where b.part.partNo = :partNo")
     int deleteByPartNo(@Param("partNo") Long partNo);
+
+    // item 기준 삭제
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from BOM b where b.item.itemNo = :itemNo")
+    int deleteByItemNo(@Param("itemNo") Long itemNo);
 }
+

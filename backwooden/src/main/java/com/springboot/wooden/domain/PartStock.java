@@ -23,6 +23,7 @@ public class PartStock {
     @Column(name = "ps_qty", nullable = false)
     private Integer psQty;
 
+    // 동시에 같은 수정 못하게 막음
     @Version // ← 낙관적 락 버전 칼럼 (INT/BIGINT)
     private Long version;
 

@@ -1,12 +1,11 @@
-// service/ItemServiceImpl.java
 package com.springboot.wooden.service;
 
 import com.springboot.wooden.domain.Item;
 import com.springboot.wooden.domain.ItemStock;
+import com.springboot.wooden.domain.Order;
 import com.springboot.wooden.dto.ItemRequestDto;
 import com.springboot.wooden.dto.ItemResponseDto;
-import com.springboot.wooden.repository.ItemRepository;
-import com.springboot.wooden.repository.ItemStockRepository;
+import com.springboot.wooden.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +19,9 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final ItemStockRepository itemStockRepository;
+    private final OrderRepository orderRepository;
+    private final PlanRepository planRepository;
+    private final BOMRepository bomRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,13 +75,24 @@ public class ItemServiceImpl implements ItemService {
         return toDto(it);
     }
 
-    @Override
     @Transactional
     public void delete(Long itemNo) {
-        // 1) 연결된 재고행이 있으면 삭제 금지
-        if (itemStockRepository.existsById(itemNo)) {
-            throw new IllegalStateException("해당 품목의 재고가 남아 있어 삭제할 수 없습니다. 먼저 재고를 삭제하세요.");
+        if (orderRepository.existsUncompletedByItem(itemNo)) {
+            throw new IllegalStateException("삭제 불가: 납품이 완료되지 않은 주문이 존재합니다.");
         }
+        // 완료 주문 스냅샷 → FK 해제
+        for (Order o : orderRepository.findAllByItem_ItemNo(itemNo)) {
+            if ("승인완료".equals(o.getOrderState()) && "납품완료".equals(o.getOrderDeliState())) {
+                if (o.getItem() != null) {
+                    if (o.getItemNameSnapshot() == null) o.changeItemNameSnapshot(o.getItem().getItemName());
+                    if (o.getItemCodeSnapshot() == null) o.changeItemCodeSnapshot(o.getItem().getItemCode());
+                    if (o.getItemSpecSnapshot() == null) o.changeItemSpecSnapshot(o.getItem().getItemSpec());
+                }
+                o.changeItem(null);
+            }
+        }
+        // BOM/Stock 선정리 후 Item 삭제
+        bomRepository.deleteByItemNo(itemNo);
         itemRepository.deleteById(itemNo);
     }
 
