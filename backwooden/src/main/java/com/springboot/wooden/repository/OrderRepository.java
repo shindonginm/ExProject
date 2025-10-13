@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -56,4 +57,30 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         order by o.orderDate desc, o.orderNo desc
     """)
     List<OrderListRow> findOrderListRows();
+
+
+    /**
+     * 예측용 메서드
+     * 주간 히스토리(빈 주=0) 집계를 위한 "원본 행" 조회용:
+     * - itemNo 기준
+     * - deliveryDate 기간 내
+     * - 납품완료(or 승인완료)만
+     */
+    @Query("""
+        select o
+        from OrderEntity o
+        where o.item.itemNo = :itemNo
+          and o.deliveryDate is not null
+          and o.deliveryDate between :start and :end
+          and (
+                o.orderDeliState = '납품완료'
+             or o.orderState     = '승인완료'
+          )
+        order by o.deliveryDate asc, o.orderNo asc
+    """)
+    List<Order> findCompletedByItemAndDeliveryDateBetween(
+            @Param("itemNo") Long itemNo,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
 }
