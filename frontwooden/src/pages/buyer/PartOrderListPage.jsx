@@ -1,4 +1,3 @@
-// src/pages/buyer/PartOrderListPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCRUD } from "../../hook/useCRUD.jsx";
