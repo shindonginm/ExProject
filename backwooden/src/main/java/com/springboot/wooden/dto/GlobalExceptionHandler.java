@@ -78,7 +78,9 @@ public class GlobalExceptionHandler {
     // 선택: 기타 런타임 예외를 400으로 통일하고 싶으면 유지
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
-        return badRequest("RUNTIME_ERROR", ex.getMessage());
+        log.error("Runtime", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("code","RUNTIME_ERROR","message","요청을 처리할 수 없습니다."));
     }
 
     // 최종 캐치올

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping ("/api/plan/planlist")
@@ -39,6 +40,13 @@ public class PlanController {
                                                   @RequestBody @Valid PlanRequestDTO dto) {
         PlanResponseDTO updated = planService.update(planNo, dto);
         return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{planNo}/status")
+    public ResponseEntity<Void> patchStatus(@PathVariable Long planNo, @RequestBody Map<String, String> body) {
+        String next = body.get("planState");
+        planService.patchStatus(planNo, next);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{planNo}")

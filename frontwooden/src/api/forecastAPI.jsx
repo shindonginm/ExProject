@@ -1,17 +1,16 @@
 import axios_api from "./axios";
 
-// 예측 + 실적 시리즈 (FastAPI 포함)
-export const getForecastSeries = async (itemNo, h = 12) => {
-  const res = await axios_api.get("/forecast/series", {
-    params: { itemNo, h },
-  });
-  return res.data;
+// 드롭다우 아이템 목록
+export const getItems = async () => {
+  const { data } = await axios_api.get("/plan/itemlist/main");
+  return data; // [{itemNo, itemName}]
 };
 
-// 과거 주간 실적만 조회
-export const getWeeklyHistory = async (itemNo, weeks = 52) => {
-  const res = await axios_api.get("/history/weekly", {
-    params: { itemNo, weeks },
+export const getForecastSeries = async (itemNo, h = 12) => {
+
+  // 1 )
+  const { data } = await axios_api.get("/forecast/series", {
+    params: { itemNo, h },
   });
-  return res.data;
+  return data;
 };

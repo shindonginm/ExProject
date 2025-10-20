@@ -11,14 +11,28 @@ export const getItemList = async () => {
 
 // 등록
 export const createItemList = async (formData) => {
-  const res = await axios_api.post(host, formData);
+  const payload = {
+    itemCode: formData.itemCode,
+    itemName: formData.itemName,
+    itemPrice: Number(formData.itemPrice),
+    itemSpec: formData.itemSpec ?? "",
+  };
+  const res = await axios_api.post(host, payload);
   return res.data;
 };
 
 // 수정
-export const updateItemList = async (itemNo, formData) => {
-  const res = await axios_api.put(`${host}/${itemNo}`, formData);
-  return res.data;
+export const updateItemList = (formData) => {
+  const { itemNo, itemCode, itemName, itemPrice, itemSpec } = formData;
+  if (!itemNo) throw new Error("itemNo 누락");
+
+  const payload = {
+    itemCode,
+    itemName,
+    itemPrice: Number(itemPrice),
+    itemSpec: itemSpec ?? "",
+  };
+  return axios_api.put(`${host}/${itemNo}`, payload).then(r => r.data);
 };
 
 // 삭제

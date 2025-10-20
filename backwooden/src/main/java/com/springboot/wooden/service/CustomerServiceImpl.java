@@ -36,34 +36,6 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerResponseDto getOne(Long id) {
-        Customer c = customerRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + id));
-
-        return CustomerResponseDto.builder()
-                .cusNo(c.getCusNo())
-                .cusComp(c.getCusComp())
-                .cusName(c.getCusName())
-                .cusEmail(c.getCusEmail())
-                .cusPhone(c.getCusPhone())
-                .cusAddr(c.getCusAddr())
-                .build();
-    }
-
-    @Override
-    public Optional<CustomerResponseDto> getByCompany(String company) {
-        return customerRepository.findByCusComp(company)
-                .map(c -> CustomerResponseDto.builder()
-                        .cusNo(c.getCusNo())
-                        .cusComp(c.getCusComp())
-                        .cusName(c.getCusName())
-                        .cusEmail(c.getCusEmail())
-                        .cusPhone(c.getCusPhone())
-                        .cusAddr(c.getCusAddr())
-                        .build());
-    }
-
-    @Override
     @Transactional
     public CustomerResponseDto register(CustomerRequestDto dto) {
         Customer saved = customerRepository.save(Customer.builder()
@@ -109,21 +81,23 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     @Override
     public void delete(Long cusNo) {
-        boolean hasUncompleted = orderRepository.existsUncompletedByCustomer(cusNo);
+        boolean hasUncompleted =
+                orderRepository.existsByCustomer_CusNoAndOrderDeliStateNot(cusNo, "납품완료");
+
         if (hasUncompleted) {
             throw new IllegalStateException("삭제 불가: 납품이 완료되지 않은 주문이 존재합니다.");
         }
 
-        List<Order> completedOrders = orderRepository.findAllByCustomer_CusNo(cusNo);
-        for (Order order : completedOrders) {
-            if ("승인완료".equals(order.getOrderState()) &&
-                    "납품완료".equals(order.getOrderDeliState())) {
+        List<Order> orders = orderRepository.findAllByCustomer_CusNo(cusNo);
+        for (Order order : orders) {
+            // 완료된 주문만 스냅샷 보존 후 FK 해제
+            if ("승인완료".equals(order.getOrderState())
+                    && "납품완료".equals(order.getOrderDeliState())) {
 
-                if (order.getCustomer() != null && order.getCusCompSnapshot() == null) {
-                    order.changeCusCompSnapshot(order.getCustomer().getCusComp());
-                }
+                // FK 끊기 전에 스냅샷 채우기
+                order.snapshotItemBeforeUnlink();
 
-                // 🔹 전용 change 메서드 사용
+                // FK 해제
                 order.changeCustomer(null);
             }
         }

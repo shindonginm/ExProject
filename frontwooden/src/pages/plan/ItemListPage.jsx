@@ -1,12 +1,13 @@
 
 
-  import { useEffect } from "react";
-  import { useCRUD } from "../../hook/useCRUD";
+  import { useEffect, useState, useMemo } from "react";
+  import { useCRUD } from "../../hook/useCRUD.jsx";
   import { getItemList, createItemList, updateItemList, deleteItemList } from "../../api/ItemListAPI"; // src/api/각자맡은부분API.jsx import해서 CRUD기능들을 모두 가져옴
   import ModalComponent from "../../components/ModalComponent";
   import ItemListForm from "../../form/plan/ItemListForm.jsx";
   import ButtonComponent from "../../components/ButtonComponent.jsx";
   import BackButtonComponent from "../../components/BackButtonComponent.jsx";
+  import SearchComponent from "../../components/SearchComponent.jsx";
   import { initForms } from "../../arrays/TableArrays.jsx";
   import { ItemListArrays } from "../../arrays/ItemArrays";
   import { useNavigate } from "react-router-dom";
@@ -17,14 +18,13 @@
     getAll: getItemList,            //api 폴더에 있는 api파일 List전체를 보여주는 기능
     create: createItemList,         //api 폴더에 있는 api파일의 등록 기능
     update: updateItemList,         //api 폴더에 있는 api파일의 수정 기능
-    delete: deleteItemList          //api 폴더에 있는 api파일의 삭제 기능
+    delete: (id) => deleteItemList(id),          //api 폴더에 있는 api파일의 삭제 기능
   };
 
 
   const SellerCustomerListPage = () => {
     const navigate = useNavigate();   // navigate 상수 생성
 
-    
     const {   // < 이 상수는 useCRUD.jsx 파일 내에 있는 useState, const로 선언된 상수, 이벤트 핸들러를 불러올수 있게 함.
       items: itemList,    // useCRUD.jsx내 있는 const [items,setItems] = useState([]);의 items의 이름을 partOrders로 재정의함.
       setItems: setItemList, // 위와 마찬가지로 setItems의 이름을 setPartOrders로 정의하여 useState의 상수명을 일반화하여 사용한다.
@@ -42,37 +42,76 @@
       closeEdit,            // 수정 모달창을 닫는 함수(CloseBtnComponent.jsx에서 사용함) (isEditOpen의 값이 true면 모달창이 닫힌다.)
       selectedItem          // 맨 밑에 수정/삭제 모달창에서 selectedItem &&(AND연산자) ... 조건문을 통해 selectedItem이 있을 때만 수정/삭제 폼을 보여줌.
     } = useCRUD({ // import한 useCRUD.jsx를 사용하는 선언부임.
-      initFormData: () => initForms.itemList, // 초기 폼 데이터를 설정하는 함수 (TableArrays.jsx에서 initForms안에 자신이 맡은 부분의 이름을 불러오는것)
+      initFormData: () => initForms.sellerCustomer, // 초기 폼 데이터를 설정하는 함수 (TableArrays.jsx에서 initForms안에 자신이 맡은 부분의 이름을 불러오는것)
       // initForm."partOrder"만 바꾸면 됨.
       api,   // CRUD API 함수들을 담은 객체 (getAll, create, update, delete)
       keyField: "itemNo",   // useCRUD파일 내에 선언된 keyfield에서 선언 한 값을 백에서 정의한 기본키인 poNo로 재정의 함
     });
 
+    // 검색 상태 : 즉시입력(q)와 디바운스된 검색어 분리
+    const [q, setQ] = useState("");
+    const [term, setTerm] = useState("");
 
     useEffect(() => {   // 테이블 내에 있는 데이터들을 api파일을 거져 화면에 렌더링하는 useEffect
+      // 초기 목록 로드
       const fetchData = async() => {  // async ()=> 비동기 함수인 fetchData 생성
         const data = await getItemList();    // const data로 data를 선언한뒤 await(비동기가 작업이 끝날 때) api파일에서 생성한 getPartOrder을 실행함
-        setItemList(data);  // useCRUD에서 선언한 setItems를 재정의 한 setPartOrders에 바로 위에서 선언한 data의 값을 넣는다.
+        setItemList(Array.isArray(data) ? data : []);  // useCRUD에서 선언한 setItems를 재정의 한 setPartOrders에 바로 위에서 선언한 data의 값을 넣는다.
       }
       fetchData();    // 위에서 선언한 비동기 함수인 fetchData를 실행한다.
-    },[])
+    },[setItemList]);
 
-    
+    // 상품명 추출기 : 필드명 기억 못하는 것 방지
+    const getName = (row) => 
+      row.itemName ?? row.itemName ?? row.name ?? row.pname ?? row.itemTitle ?? "";
+
+    // 디바운스된 term 으로 로컬 필터
+    const filtered = useMemo(() => {
+      const t = term.trim().toLowerCase();
+      if (!t) return itemList;
+      return itemList.filter((r) => getName(r).toLowerCase().includes(t));
+      
+    }, [itemList, term]);
+
     return (        // react의 화면을 렌더링하는 return부분
       <div className="page-wrapper">  {/* className="page-wrapper"(변경 XX) > 각자 페이지에 padding으로 여백을 조정하게 함*/}
         <BackButtonComponent text="< &nbsp;이전페이지" onClick={() => navigate(-1)} /> {/*이전페이지 버튼 사용*/}
         <h2 style={{ textAlign: "center" }}>상품 리스트</h2>     {/* 각자 페이지에 맞는 카테고리명을 h2안에 입력 */}
+        
+        <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+          <SearchComponent
+            value={q}
+            onChange={setQ}
+            onDebounced={setTerm}    // 디바운스 후에만 필터 반영
+            delay={300}
+            minLength={0}
+            placeholder="검색"
+            className="border rounded px-3 py-2"
+          />
+          <ButtonComponent onClick={async () => {
+            const data = await getItemList();
+            setItemList(Array.isArray(data) ? data : [])}} text="새로고침" cln="submit" />
+        </div>
+
+
 
         {/* 테이블 */}
-        <table>     {/* 테이블 생성(구조는 같으니 변경 X ) */}
-          <thead>   {/* thead > table안에 컬럼을 감싸는 요소*/}
+        {/* 테이블 생성(구조는 같으니 변경 X ) */}
+        <table>
+
+          {/* thead > table안에 컬럼을 감싸는 요소*/}
+          <thead>
+
+            {/* partOrderArrays.jsx에서 선언한 배열 안에 id, content만 사용해서 테이블 컬럼명 생성.*/}
             <tr> 
-              {ItemListArrays.map(col => <th key={col.id}>{col.content}</th>)} {/* partOrderArrays.jsx에서 선언한 배열 안에 id, content만 사용해서 테이블 컬럼명 생성.*/}
+              {ItemListArrays.map(col => <th key={col.id}>{col.content}</th>)}
             </tr>
           </thead>
-          <tbody>   {/* tbody > 테이블의 몸통부분 요소 */}
-            {itemList && itemList.length > 0 ? (  
-              itemList.map((po, index) => (
+
+          {/* tbody > 테이블의 몸통부분 요소 */}
+          <tbody>
+            {filtered && filtered.length > 0 ? (  
+              filtered.map((po) => (
                 <tr key={po.itemNo} className="row" onClick={() => openEdit(po)}>
                   {ItemListArrays.map(col => (
                     <td key={col.id} style={col.clmn === "itemCode" ? { color: "blue", textDecoration: "underline" } : {}}>
@@ -115,11 +154,12 @@
         >
           {selectedItem && (
             <>
-              <ItemListForm formData={formData} onChange={handleChange} onSubmit={handleUpdate} />
+              <ItemListForm formData={formData} onChange={handleChange} onSubmit={handleUpdate}>
               <div className="btn-wrapper">
                 <ButtonComponent text="수정" onClick={handleUpdate} cln="fixbtn" />
-                <ButtonComponent text="삭제" onClick={handleDelete} cln="delbtn" />
+                <ButtonComponent text="삭제" onClick={handleDelete} cln="delbtn" />              
               </div>
+              </ItemListForm>
             </>
           )}
         </ModalComponent>

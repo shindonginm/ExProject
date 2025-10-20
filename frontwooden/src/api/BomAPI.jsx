@@ -1,11 +1,13 @@
-// src/api/BomAPI.js
 import axios_api from "./axios";
+import { BASE_URL } from "./config";
 
-const host = "/plan/bom";
+const host = `${BASE_URL}/plan/bom`;
 
 // 목록
-export const getBomList = () =>
-  axios_api.get(host).then(r => r.data);
+export const getBomList = async () => {
+  const res = await axios_api.get(host);
+  return res.data;
+}
 
 // 단건
 export const getBomOne = (bomId) =>
@@ -21,9 +23,10 @@ export const createBom = (formData) => {
   return axios_api.post(host, payload).then(r => r.data);
 };
 
-// ✅ 수정: useCRUD 스타일(한 개 인자)로 변경
+// 수정: useCRUD 스타일(한 개 인자)로 변경
 export const updateBom = (formData) => {
   const { bomId, itemNo, partNo, qtyPerItem } = formData;
+  if (!bomId && bomId !== 0) throw new Error("bomId 누락");
   const payload = {
     itemNo: Number(itemNo),
     partNo: Number(partNo),

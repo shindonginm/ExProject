@@ -1,26 +1,22 @@
 // src/pages/buyer/PartListPage.jsx
-import { useEffect } from "react";
-import {
-  getPartList,
-  createPartList,
-  updatePartList,
-  deletePartList,
-} from "../../api/PartListAPI";
+import { useEffect, useMemo, useState } from "react";
+import { getPartList, createPartList, updatePartList, deletePartList } from "../../api/PartListAPI";
 import { useCRUD } from "../../hook/useCRUD";
 import ModalComponent from "../../components/ModalComponent";
 import PartListForm from "../../form/buyer/PartListForm";
 import ButtonComponent from "../../components/ButtonComponent";
 import BackButtonComponent from "../../components/BackButtonComponent";
+import SearchComponent from "../../components/SearchComponent.jsx";
 import { initForms } from "../../arrays/TableArrays";
 import { useNavigate } from "react-router-dom";
 import { PartListArray } from "../../arrays/PartListArrays";
-import axios_api from "../../api/axios"; // axios_api 사용 (baseURL 일관)
-                                     // (직접 axios+BASE_URL 혼용 지양)
+import axios_api from "../../api/axios";
 
+// API 상수
 const api = {
   getAll: getPartList,
   create: createPartList,
-  update: updatePartList,   // ✅ formData 하나만 받도록 맞춤
+  update: updatePartList,
   delete: deletePartList,
 };
 
@@ -52,27 +48,30 @@ const PartListPage = () => {
     keyField: "partNo",
   });
 
-  // 구매처(셀렉트 옵션) + 목록 로딩
+  // 검색 상태
+  const [q, setQ] = useState("");
+  const [term, setTerm] = useState("");
+
+  // 구매처 옵션 + 목록 로딩
   useEffect(() => {
     (async () => {
-      // ✅ 구매처: /api/buyer/buyercustomer
       const res = await axios_api.get("/buyer/buyercustomer");
-      const options = res.data.map((t) => ({
-        label: t.buyerComp,  // 구매처명
-        value: t.buyerNo,    // buyerNo (FK)
+      const options = (res.data ?? []).map((t) => ({
+        label: t.buyerComp,
+        value: t.buyerNo,
       }));
       setCustomer(options);
 
-      // 목록
       const data = await getPartList();
-      setPartList(data);
+      setPartList(Array.isArray(data) ? data : []);
     })();
   }, [setCustomer, setPartList]);
 
-  // 수정모달 열릴 때 buyerComp(이름) → buyerNo 역매핑
+  // 수정모달 열릴 때 buyerComp → buyerNo 역매핑
   useEffect(() => {
     if (!isEditOpen || !selectedItem || !customer?.length) return;
-    const buyerNo = customer.find((c) => c.label === selectedItem.buyerComp)?.value ?? "";
+    const buyerNo =
+      customer.find((c) => c.label === selectedItem.buyerComp)?.value ?? "";
     setFormData((prev) => ({
       ...prev,
       partNo: selectedItem.partNo,
@@ -80,31 +79,56 @@ const PartListPage = () => {
       partCode: selectedItem.partCode,
       partSpec: selectedItem.partSpec,
       partPrice: selectedItem.partPrice,
-      buyerComp: buyerNo, // ✅ select 값으로 세팅 (buyerNo)
+      buyerComp: buyerNo,
     }));
   }, [isEditOpen, selectedItem, customer, setFormData]);
 
-  // 기본 submit/버블 방지용
   const stop = (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
   };
 
-  const refetch = async () => setPartList(await getPartList());
+  const refetch = async () => {
+    const data = await getPartList();
+    setPartList(Array.isArray(data) ? data : []);
+  };
 
   const doCreate = async (e) => { stop(e); await handleCreate(); await refetch(); closeCreate(); };
   const doUpdate = async (e) => { stop(e); await handleUpdate(); await refetch(); closeEdit(); };
   const doDelete = async (e) => { stop(e); await handleDelete(); await refetch(); closeEdit(); };
 
+  // 부품명으로 검색
+  const getPartName = (row) =>
+    row?.partName ?? row?.name ?? row?.pname ?? "";
+
+  // 디바운스된 term으로만 필터 (부품명 기준)
+  const filtered = useMemo(() => {
+    const t = term.trim().toLowerCase();
+    if (!t) return partList ?? [];
+    return (partList ?? []).filter((p) =>
+      getPartName(p).toLowerCase().includes(t)
+    );
+  }, [partList, term]);
+
   return (
     <div className="page-wrapper">
-      <BackButtonComponent
-        text="< 이전페이지"
-        onClick={() => navigate(-1)}
-      />
+      <BackButtonComponent text="< 이전페이지" onClick={() => navigate(-1)} />
       <h2 style={{ textAlign: "center" }}>부품리스트</h2>
 
-      {/* 테이블 */}
+      {/* 상단 툴바: 부품명 검색 + 새로고침 */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+        <SearchComponent
+          value={q}
+          onChange={setQ}
+          onDebounced={setTerm}
+          delay={300}
+          minLength={0}
+          placeholder="부품명 검색"
+          className="border rounded px-3 py-2"
+        />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+      </div>
+
       <table>
         <thead>
           <tr>
@@ -115,11 +139,10 @@ const PartListPage = () => {
         </thead>
 
         <tbody>
-          {partList?.length ? (
-            partList.map((part) => (
+          {filtered?.length ? (
+            filtered.map((part) => (
               <tr key={part.partNo} className="row">
                 <td>{part.partNo}</td>
-
                 {/* 부품명 클릭 시 수정 모달 */}
                 <td
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
@@ -127,8 +150,7 @@ const PartListPage = () => {
                 >
                   {part.partName}
                 </td>
-
-                <td>{part.buyerComp?.trim() || "구매처 지정 필요"}</td>
+                <td>{part.buyerComp}</td>
                 <td>{part.partCode}</td>
                 <td>{part.partSpec}</td>
                 <td>{part.partPrice}</td>
@@ -143,9 +165,9 @@ const PartListPage = () => {
           )}
         </tbody>
       </table>
-
-      <br />
-      {/* ✅ 라벨 정정: "주문 등록" → "부품 등록" */}
+      
+      {/* 등록 버튼 */}
+      <br/>
       <ButtonComponent onClick={openCreate} text={"부품 등록"} cln="submit" />
 
       {/* 등록 모달 */}

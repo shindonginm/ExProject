@@ -2,6 +2,7 @@ package com.springboot.wooden.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.springboot.wooden.config.ForecastEngineProps;
 import com.springboot.wooden.dto.ForecastSeriesDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -14,36 +15,32 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ForecastEngineClient {
 
-    // 필요시 @Bean 주입으로 바꿔도 됨
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate forecastRestTemplate; // RestClientConfig에서 만든 빈
+    private final ForecastEngineProps props;         // 분리한 설정 빈
     private final ObjectMapper om = new ObjectMapper();
 
-    /**
-     * 파이썬 엔진(예: http://localhost:5001/forecast/weekly) 호출.
-     * body: { history:[{date,qty},...], horizon:n }
-     * resp: [{date, mean, p10, p50, p90}, ...]
-     */
     public List<ForecastSeriesDto.FcPoint> forecastWeekly(
             List<ForecastSeriesDto.HistPoint> history, int horizon) {
 
-        String url = "http://localhost:5001/forecast/weekly"; // 필요시 yml로 분리
-        Map<String, Object> body = new HashMap<>();
-        body.put("history", history);
-        body.put("horizon", horizon);
+        String url = props.getBaseUrl() + "/forecast/weekly";
+        Map<String, Object> body = Map.of(
+                "history", history,
+                "horizon", horizon > 0 ? horizon : props.getHorizon()
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        ResponseEntity<String> res = restTemplate.postForEntity(
+        ResponseEntity<String> res = forecastRestTemplate.postForEntity(
                 url, new HttpEntity<>(body, headers), String.class);
 
         try {
             List<Map<String, Object>> raw = om.readValue(
-                    res.getBody(), new TypeReference<>() {});
+                    res.getBody(), new TypeReference<>(){});
             List<ForecastSeriesDto.FcPoint> out = new ArrayList<>();
             for (Map<String, Object> m : raw) {
                 out.add(ForecastSeriesDto.FcPoint.builder()
-                        .date((String)m.get("date"))
+                        .date((String) m.get("date"))
                         .mean(toD(m.get("mean")))
                         .p10(toD(m.get("p10")))
                         .p50(toD(m.get("p50")))

@@ -2,9 +2,7 @@
 import { ItemListArrays } from "../../arrays/ItemArrays";
 
 
-const ItemListForm = ({ formData, onClose, onSubmit,onChange }) => {
- 
-   
+const ItemListForm = ({ formData, onClose, onSubmit,onChange,children }) => {
 
   return (
     <div className="form-wrapper">
@@ -17,13 +15,12 @@ const ItemListForm = ({ formData, onClose, onSubmit,onChange }) => {
               name={data.clmn}
               value={formData[data.clmn] || ""}
               onChange={onChange}
-              placeholder={`${data.content}을(를) 입력하세요`}
             />
             
           </p>
         </div>
       ))}
-      
+      {children}
     </div>
   );
 };

@@ -40,7 +40,7 @@ const BuyerDeliveryPage = () => {
   return(
     <div style={{ padding: "20px" }} className="customer-wrapper">
       <BackButtonComponent text="< &nbsp;이전페이지" onClick={()=>navigate(-1)}/>
-      <h2 style={{ textAlign: "center" }}>판매 거래처 리스트</h2>
+      <h2 style={{ textAlign: "center" }}>입고 현황</h2>
 
       <table
         border="1"

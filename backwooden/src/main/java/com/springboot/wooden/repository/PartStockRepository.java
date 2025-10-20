@@ -8,10 +8,4 @@ import java.util.Optional;
 
 public interface PartStockRepository extends JpaRepository<PartStock, Long> {
 
-    @EntityGraph(attributePaths = "part")
-    @Query("select ps from PartStock ps")
-    List<PartStock> findAllWithPart();
-
-//    공유 PK가 같음
-    Optional<PartStock> findByPart_PartNo(Long partNo);
 }

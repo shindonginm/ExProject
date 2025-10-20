@@ -1,53 +1,106 @@
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useCRUD } from "../../hook/useCRUD";
 import { getPartStockList } from "../../api/partStockApi";
-import { getCompletedPartOrders } from "../../api/PartOrderAPI";
-
 import { initForms } from "../../arrays/TableArrays";
 import { PartStockListArray } from "../../arrays/PartStockListArray";
 import { partOrderArrays } from "../../arrays/partOrderArrays";
+import { getCompletedPartOrders } from "../../api/PartOrderAPI";
+import SearchComponent from "../../components/SearchComponent";
 
 const PartStockListPage = () => {
-  const {
-    items: stocks,
-    setItems: setStocks,
-  } = useCRUD({
+  const { items, setItems } = useCRUD({
     initFormData: () => ({ ...initForms.partStock }),
   });
+  const [completed, setCompleted] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // 완료 발주 목록은 별도 상태
-  const {
-    items: completed,
-    setItems: setCompleted,
-  } = useCRUD({
-    initFormData: () => ({}),
-  });
+  // 부품 재고 검색
+  const [psQ, setPsQ] = useState("");
+  const [psTerm, setPsTerm] = useState("");
 
-  // 최초 로드
-  useEffect(() => {
+  // 입고 완료 검색
+  const [rcQ, setRcQ] = useState("");
+  const [rcTerm, setRcTerm] =useState("");
+
+  useEffect (() => {
     (async () => {
       try {
-        const [s, c] = await Promise.all([
-          getPartStockList(),
-          getCompletedPartOrders(),
-        ]);
-        setStocks(Array.isArray(s) ? s : []);
-        setCompleted(Array.isArray(c) ? c : []);
+        const data = await getPartStockList();
+        setItems(Array.isArray(data) ? data : []);
       } catch (e) {
-        setStocks([]);
-        setCompleted([]);
+        console.error(e);
+        setItems([]);
       }
     })();
-  }, [setStocks, setCompleted]);
+  }, [setItems]);
 
-  const safeStocks = Array.isArray(stocks) ? stocks : [];
+  // 전체 새로고침
+  const reloadAll = async () => {
+    setLoading(true);
+    try {
+      const [stocks, parts] = await Promise.all([
+        getPartStockList(),
+        getCompletedPartOrders(),
+      ]);
+      setItems(Array.isArray(stocks) ? stocks : []);
+      setCompleted(Array.isArray(parts) ? parts : []);
+    } catch (e) {
+      console.error(e);
+      setItems([]);
+      setCompleted([]);
+      alert(e?.response?.data?.message || e?.response?.data?.error || "목록을 가져오지 못했습니다");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { reloadAll(); }, []);
+
+  const safeItems = Array.isArray(items) ? items : [];
   const safeCompleted = Array.isArray(completed) ? completed : [];
+
+  // 재고 표 필터 (부품명/재고ID)
+  const filteredStocks = useMemo(() => {
+  const t = (psTerm || "").trim().toLowerCase();
+  if (!t) return safeItems;
+  return safeItems.filter(r => {
+    const name = (r.partName || "").toLowerCase();
+    const id   = String(r.psNo || "");
+    return name.includes(t) || id.includes(t);
+  });
+  }, [safeItems, psTerm]);
+
+  // 입고완료 표 필터 (거래처/부품명/발주번호)
+  const filteredReceived = useMemo(() => {
+    const t = (rcTerm || "").trim().toLowerCase();
+    if (!t) return safeCompleted;
+    return safeCompleted.filter(r => {
+      const sup  = (r.supplier || r.buyerName || "").toLowerCase();
+      const name = (r.partName || "").toLowerCase();
+      const no   = String(r.poNo || "");
+      return sup.includes(t) || name.includes(t) || no.includes(t);
+  });
+  }, [safeCompleted, rcTerm]);
 
   return (
     <div className="p-4 w-full bg-white">
       <h2 className="text-2xl font-bold mb-3">부품 재고 현황</h2>
+      <button onClick={reloadAll} className="ml-auto border px-3 py-1 rounded">
+        {loading ? "새로고침..." : "새로고침"}
+      </button>
 
-      {/* 재고 테이블 */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+        <SearchComponent
+          value={psQ}
+          onChange={setPsQ}
+          onDebounced={setPsTerm}
+          delay={300}
+          placeholder="재고 검색 (부품명/재고ID)"
+          className="border rounded px-3 py-2"
+        />
+      </div>
+
+      {/* 테이블 */}
       <table className="w-full border-collapse border">
         <thead>
           <tr className="bg-gray-100">
@@ -65,12 +118,18 @@ const PartStockListPage = () => {
           </tr>
         </thead>
         <tbody>
-          {safeStocks.length ? (
-            safeStocks.map((row) => (
-              <tr key={row.psNo}>
-                <td className="border px-2 py-1">{row.psNo}</td>
-                <td className="border px-2 py-1">{row.partName}</td>
-                <td className="border px-2 py-1 text-right">{row.psQty}</td>
+          {filteredStocks.length ? (
+            filteredStocks.map((row, index) => (
+              <tr key={row.psNo ?? `${row.partName}-${index}`}>
+                {PartStockListArray.map((col) => {
+                  const val = row[col.clmn];
+                  return (
+                    <td key={`${row.psNo ?? index}-${col.id}`}
+                        className={`border px-2 py-1 ${col.align === "right" ? "text-right" : ""}`}>
+                          {typeof val === "number" ? val.toLocaleString() : val ?? ""}
+                    </td>
+                  )
+                })}
               </tr>
             ))
           ) : (
@@ -86,41 +145,60 @@ const PartStockListPage = () => {
         </tbody>
       </table>
 
-      <hr className="my-6 opacity-30" />
-
       <h3 className="text-xl font-semibold mb-2">입고완료 리스트</h3>
+
+      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+        <SearchComponent
+          value={rcQ}
+          onChange={setRcQ}
+          onDebounced={setRcTerm}
+          delay={300}
+          placeholder="입고완료 검색 (거래처/부품명/발주번호)"
+          className="border rounded px-3 py-2"
+        />
+      </div>
+
       <table className="w-full border-collapse border">
         <thead>
           <tr className="bg-gray-100">
-            {partOrderArrays.map((col) => (
-              <th key={col.id} className="border px-2 py-1 text-left">
+            {partOrderArrays.map(col => (
+              <th
+                key={col.id}
+                className={`border px-2 py-1 ${col.align === "right" ? "text-right" : "text-left"}`}
+              >
                 {col.content}
               </th>
-            ))}
+              ))}
           </tr>
-        </thead>
-        <tbody>
-          {safeCompleted.length ? (
-            safeCompleted.map((row) => (
-              <tr key={row.poNo}>
-                {partOrderArrays.map((col) => (
-                  <td key={`${row.poNo}-${col.id}`} className="border px-2 py-1">
-                    {row[col.clmn] ?? ""}
+          </thead>
+
+          <tbody>
+            {filteredReceived.length ? (
+              filteredReceived.map(row => (
+                <tr key={row.poNo}>
+                  {partOrderArrays.map(col => {
+                    const v = row[col.clmn];
+                    const text = typeof v === "number" ? Number(v).toLocaleString() : (v ?? "");
+                    return (
+                      <td
+                        key={`${row.poNo}-${col.id}`}
+                        className={`border px-2 py-1 ${col.align === "right" ? "text-right" : ""}`}
+                      >
+                        {text}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            ) : (
+                
+                <tr>
+                  <td className="border px-2 py-6 text-center" colSpan={partOrderArrays.length}>
+                    입고완료 내역이 없습니다.
                   </td>
-                ))}
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td
-                className="border px-2 py-6 text-center"
-                colSpan={partOrderArrays.length}
-              >
-                입고완료 내역이 없습니다.
-              </td>
-            </tr>
-          )}
-        </tbody>
+                </tr>
+                )}                
+          </tbody>
       </table>
     </div>
   );

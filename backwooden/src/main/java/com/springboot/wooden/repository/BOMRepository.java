@@ -25,9 +25,6 @@ public interface BOMRepository extends JpaRepository<BOM, Long> {
     @EntityGraph(attributePaths = {"item", "part"})
     List<BOM> findAllByItem_ItemNo(Long itemNo);
 
-    // 이 부품을 쓰는 BOM 행이 존재하는가?
-    boolean existsByPart_PartNo(Long partNo);
-
     // part 기준 삭제
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from BOM b where b.part.partNo = :partNo")

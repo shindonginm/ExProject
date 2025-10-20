@@ -37,13 +37,6 @@ public class PartOrderServiceImpl implements PartOrderService {
     }
 
     @Override
-    public PartOrderResponseDto getOne(Long poNo) {
-        PartOrder po = partOrderRepository.findById(poNo)
-                .orElseThrow(() -> new IllegalArgumentException("발주 없음: " + poNo));
-        return toDto(po);
-    }
-
-    @Override
     @Transactional
     public PartOrderResponseDto addPartOrder(PartOrderRequestDto dto) {
         Buyer buyer = buyerRepository.findById(dto.getBuyerNo())

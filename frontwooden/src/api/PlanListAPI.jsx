@@ -1,4 +1,5 @@
 import axios_api from "./axios";
+import { BASE_URL } from "./config";
 
 const host = "/plan/planlist";
 
@@ -41,8 +42,23 @@ export const updatePlan = async (formData) => {
   return res.data;
 };
 
+// 상태 PATCH
+export const patchPlanStatus = (planNo, payload) => {
+  return axios_api.patch(`${BASE_URL}/plan/planlist/${planNo}/status`, payload, {
+    headers: {"Content-Type" : "application/json"}
+    }).then(r => r.data);
+};
+
+// 완료된 생산 리스트
+export const getCompletedPlanList = async () => {
+  const res = await axios_api.get(`${host}/completed`);
+  return res.data;
+}
+
 // 삭제
 export const deletePlan = async (planNo) => {
   const res = await axios_api.delete(`${host}/${planNo}`);
   return res.data;
 };
+
+

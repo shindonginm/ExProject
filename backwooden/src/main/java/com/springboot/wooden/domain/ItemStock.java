@@ -1,10 +1,13 @@
 package com.springboot.wooden.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.util.Objects;
 
@@ -20,7 +23,7 @@ public class ItemStock {
     @Column(name = "item_no")               // PK == FK
     private Long itemNo;                    // 공유 PK (== Item.itemNo)
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @MapsId
     @JoinColumn(name = "item_no", nullable = false)
     private Item item;
@@ -39,18 +42,25 @@ public class ItemStock {
     }
 
     // 수량 증감 메서드
-    public void changeQty(int proQty) {
-        if (proQty <= 0) throw new IllegalArgumentException("proQty Must be > 0");
-        this.isQty += proQty;
-        this.totalIn += proQty;
+    public void produce(int qty) {              // 입고(생산완료)
+        if (qty <= 0) throw new IllegalArgumentException("qty must be > 0");
+        this.isQty += qty;
+        this.totalIn += qty;
     }
 
-    public void sell(int sellQty) {
-        if (sellQty <= 0) throw new IllegalArgumentException("sellQty Must be > 0");
-        int next = this.isQty - sellQty;
+    public void sell(int qty) {                 // 출고(주문완료)
+        if (qty <= 0) throw new IllegalArgumentException("qty must be > 0");
+        int next = this.isQty - qty;
         if (next < 0) throw new IllegalStateException("재고가 부족합니다");
         this.isQty = next;
-        this.totalOut += sellQty;
+        this.totalOut += qty;
+    }
+
+    // 둘 다 처리하는 통합 메서드
+    public void applyDelta(int delta) {
+        if (delta == 0) throw new IllegalArgumentException("delta must not be 0");
+        if (delta > 0) produce(delta);
+        else sell(-delta);
     }
 }
 

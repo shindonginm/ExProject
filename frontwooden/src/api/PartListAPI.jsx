@@ -1,16 +1,11 @@
 import axios_api from "./axios";
 
-const HOST = "/buyer/partlist";
+const host = "/buyer/partlist";
 
 // 전체 조회
 export const getPartList = async () => {
-  const res = await axios_api.get(HOST);
+  const res = await axios_api.get(host);
   return res.data;
-};
-
-export const getPartByBuyer = async (buyerNo) => {
-  const { data } = await axios_api.get(`${HOST}/buyer/${buyerNo}`);
-  return data;
 };
 
 // 등록
@@ -28,7 +23,7 @@ export const createPartList = async (formData) => {
     throw new Error("구매처(buyerNo) 선택은 필수입니다.");
   }
 
-  const res = await axios_api.post(HOST, payload);
+  const res = await axios_api.post(host, payload);
   return res.data;
 };
 
@@ -45,12 +40,12 @@ export const updatePartList = async (formData) => {
   };
   if (!payload.buyerNo) throw new Error("구매처(buyerNo) 선택은 필수입니다.");
 
-  const res = await axios_api.put(`${HOST}/${partNo}`, payload);
+  const res = await axios_api.put(`${host}/${partNo}`, payload);
   return res.data;
 };
 
 // 삭제
 export const deletePartList = async (partNo) => {
-  const res = await axios_api.delete(`${HOST}/${partNo}`);
+  const res = await axios_api.delete(`${host}/${partNo}`);
   return res.data;
 };

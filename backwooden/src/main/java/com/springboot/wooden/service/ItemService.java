@@ -7,7 +7,6 @@ import java.util.List;
 
 public interface ItemService {
     List<ItemResponseDto> getAll();
-    ItemResponseDto getOne(Long itemNo);
     ItemResponseDto create(ItemRequestDto dto);
     ItemResponseDto update(Long itemNo, ItemRequestDto dto);
     void delete(Long itemNo);

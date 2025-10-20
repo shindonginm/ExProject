@@ -1,7 +1,9 @@
 package com.springboot.wooden.controller;
 
+import com.springboot.wooden.domain.Item;
 import com.springboot.wooden.dto.ItemRequestDto;
 import com.springboot.wooden.dto.ItemResponseDto;
+import com.springboot.wooden.repository.ItemRepository;
 import com.springboot.wooden.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,38 +16,39 @@ import java.util.List;
 @RequestMapping("/api/plan/itemlist")
 @RequiredArgsConstructor
 public class ItemController {
-
+    // 비즈니스 로직은 전부 Service로 위임
     private final ItemService service;
+    // 드롭다운 조회용
+    private final ItemRepository itemRepository;
 
-    // 목록
+    // Item 목록 조회
     @GetMapping
     public List<ItemResponseDto> getAll() {
         return service.getAll();
     }
-
-    // 단건
-    @GetMapping("/{itemNo}")
-    public ItemResponseDto getOne(@PathVariable Long itemNo) {
-        return service.getOne(itemNo);
+    // Item 전체 아이템 목록 조회 (드롭다운용)
+    @GetMapping("/main")
+    public List<Item> getAllItems() {
+        return itemRepository.findAllLight();
     }
-
-    // 등록
+    // Item 등록
     @PostMapping
     public ResponseEntity<ItemResponseDto> create(@RequestBody @Valid ItemRequestDto dto) {
         return ResponseEntity.ok(service.create(dto));
     }
-
-    // 수정
+    // Item 수정
     @PutMapping("/{itemNo}")
     public ResponseEntity<ItemResponseDto> update(@PathVariable Long itemNo,
                                                   @RequestBody @Valid ItemRequestDto dto) {
         return ResponseEntity.ok(service.update(itemNo, dto));
     }
-
-    // 삭제
+    // Item 삭제 (성공 시 204 No Content)
     @DeleteMapping("/{itemNo}")
     public ResponseEntity<Void> delete(@PathVariable Long itemNo) {
         service.delete(itemNo);
         return ResponseEntity.noContent().build();
     }
 }
+
+// Item 에 대해 조회/등록/수정/삭제를 담당하는 REST 컨트롤러
+// URL은 /api/plan/Item 으로 정리돼 있고, 서비스에 일을 시키는 포워더 역할만 수행

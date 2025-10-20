@@ -10,31 +10,6 @@ import { useState } from "react"; // React의 상태 관리용 훅
 import axios from "axios";
 import { BASE_URL } from "../api/config";
 
-const getServerMessage = (err) => {
-  // 네트워크/타임아웃 등
-  if (!err?.response) return err?.message || "네트워크 오류";
-
-  const { status, statusText, data } = err.response;
-
-  // data가 문자열이면 그대로
-  if (typeof data === "string") return data;
-
-  // 우리가 GlobalExceptionHandler에서 내려주는 포맷 우선
-  if (data?.error) return String(data.error);
-  if (data?.message) return String(data.message);
-
-  // Bean Validation 등 { field: "메시지" } 형태일 수 있음 → 첫 값 사용
-  if (data && typeof data === "object") {
-    const first = Object.values(data)[0];
-    if (Array.isArray(first)) return first.join("\n");
-    if (first != null) return String(first);
-  }
-
-  // 그래도 없으면 상태 코드라도
-  return `HTTP ${status} ${statusText || ""}`.trim();
-};
-
-
 // - initFormData: 각 페이지별 초기 폼 데이터를 반환하는 함수
 // - api: CRUD를 수행할 API { getAll, create, update, delete }
 // - keyField: 각 아이템의 고유 키 필드명, 기본값은 "id"
@@ -100,7 +75,12 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
       setFormData(initFormData()); // 폼 초기화
       return true;
     } catch (err) {
-      alert(getServerMessage(err));
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message || "등록 중 에러";
+
+      alert(msg);
       console.error(err);
       // 얼럿은 훅에서 X . 호출한 페이지에서 ok 값 보고 처리
       return false;
@@ -126,7 +106,8 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
     setIsEditOpen(false); // 수정 모달 창 닫기
     return true; // 성공 여부 반환
   } catch (err) { 
-    alert(`수정 실패 : ${getServerMessage(err)}`);
+    const msg = err?.response?.data?.error || err?.message || "수정 중 에러";
+    alert(`수정 실패 : ${msg}`);
     console.error(err);
     return false;
     }
@@ -141,7 +122,12 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
       setIsEditOpen(false) // 수정 모달 창 닫기
       setItems(prev => prev.filter(item => item[crudKey] !== selectedItem[crudKey])); // 목록에서 삭제
     } catch (err) {
-      alert(`삭제 실패 : ${getServerMessage(err)}`);
+      const msg = 
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "삭제 중 에러"
+      alert(`삭제 실패 : ${msg}`);
       console.error(err); 
     }
   };
@@ -157,7 +143,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
   const openCreate = () => {
     setFormData(initFormData());  // 폼초기화
     setIsCreateOpen(true);    // 등록 창 열기
-        // 선택 항목 삭제
+    setSelectedItem(null);    // 선택 항목 삭제
   };
   const closeCreate = () => setIsCreateOpen(false);
   const closeEdit = () => setIsEditOpen(false);
@@ -180,7 +166,6 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
     console.log("전송 데이터:", { customerId, itemId: itemListId, orderQty });
 
     await axios.post(host, {
-      
       customerId,
       itemId: itemListId,
       orderQty,
@@ -207,7 +192,7 @@ export const useCRUD = ({ initFormData, api, keyField = "id" }) => {
     items,
     setItems,
     formData,
-    setFormData,
+    formData, setFormData,
     selectedItem,
     handleChange,
     handleCreate,

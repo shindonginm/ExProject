@@ -5,7 +5,7 @@ const host = `${BASE_URL}/order`;
 
 // 전체 주문 조회
 export const getOrderList = async () => {
-  const res = await axios_api.get(`${host}/list`);
+  const res = await axios_api.get(host);
   return res.data;
 };
 
@@ -22,9 +22,8 @@ export const updateOrderList = async (orderNo, formData) => {
 };
 
 // 상태 값 변경
-export const updateOrderStatus = async (orderNo, patch) => {
-  const res = await axios_api.patch(`${BASE_URL}/order/${orderNo}/status`,patch);
-  return res.data;
+export const updateOrderStatus = async (orderNo, body) => {
+  axios_api.patch(`${BASE_URL}/order/${orderNo}/status`, body).then(r => r.data);
 };
 
 // 상태 값 완료

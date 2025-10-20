@@ -14,46 +14,32 @@ import java.util.List;
 @RequestMapping("/api/order/sellercustomer")
 @RequiredArgsConstructor
 public class CustomerController {
-
+    // 비즈니스 로직은 전부 Service로 위임
     private final CustomerService service;
 
-    // 전체
+    // Customer 목록 조회
     @GetMapping
     public List<CustomerResponseDto> getAllCustomers() {
         return service.getAll();
     }
-
-    // 단건(ID)
-    @GetMapping("/{cusNo}")
-    public CustomerResponseDto getOne(@PathVariable Long cusNo) {
-        return service.getOne(cusNo);
-    }
-
-    // 회사명 기준 단건(Unique 가정) → 없으면 404
-    @GetMapping("/company/{company}")
-    public ResponseEntity<CustomerResponseDto> getByCompany(@PathVariable String company) {
-        return service.getByCompany(company)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    // 등록
+    // Customer 등록
     @PostMapping
     public ResponseEntity<CustomerResponseDto> createCustomer(@RequestBody @Valid CustomerRequestDto dto) {
         return ResponseEntity.ok(service.register(dto));
     }
-
-    // 수정
+    // Customer 수정
     @PutMapping("/{cusNo}")
     public ResponseEntity<CustomerResponseDto> update(@PathVariable Long cusNo,
                                                       @RequestBody @Valid CustomerRequestDto dto) {
         return ResponseEntity.ok(service.update(cusNo, dto));
     }
-
-    // 삭제
+    // Customer 삭제
     @DeleteMapping("/{cusNo}")
     public ResponseEntity<Void> delete(@PathVariable Long cusNo) {
         service.delete(cusNo);
         return ResponseEntity.noContent().build();
     }
 }
+
+// Customer 에 대해 조회/등록/수정/삭제를 담당하는 REST 컨트롤러
+// URL은 /api/order/sellercustomer 로 정리돼 있고, 서비스에 일을 시키는 포워더 역할만 수행
