@@ -14,6 +14,8 @@ export default function InlineSelectCell({
 
   const handleChange = async (e) => {
     const next = e.target.value;
+    
+    if (next === (value ?? "")) return; // 변경 없음 -> 종료
     setSaving(true);
     try { 
       await onPatch(rowKey, next); 

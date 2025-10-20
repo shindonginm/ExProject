@@ -17,7 +17,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BuyerServiceImpl implements BuyerService {
 
-    private final BuyerRepository repo;
+    private final BuyerRepository buyerRepository;
     private final PartRepository partRepository;
     private final PartOrderRepository partOrderRepository;
 
@@ -36,7 +36,7 @@ public class BuyerServiceImpl implements BuyerService {
     @Override
     @Transactional
     public BuyerResponseDto save(BuyerRequestDto dto) {
-        Buyer saved = repo.save(Buyer.builder()
+        Buyer saved = buyerRepository.save(Buyer.builder()
                 .buyerComp(dto.getBuyerComp())
                 .buyerName(dto.getBuyerName())
                 .buyerEmail(dto.getBuyerEmail())
@@ -49,22 +49,14 @@ public class BuyerServiceImpl implements BuyerService {
     // ===== 목록 =====
     @Override
     public List<BuyerResponseDto> findAll() {
-        return repo.findAll().stream().map(this::toDto).toList();
-    }
-
-    // ===== 단건 =====
-    @Override
-    public BuyerResponseDto getOne(Long id) {
-        Buyer b = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("구매거래처를 찾을 수 없습니다: " + id));
-        return toDto(b);
+        return buyerRepository.findAll().stream().map(this::toDto).toList();
     }
 
     // ===== 수정 =====
     @Override
     @Transactional
     public BuyerResponseDto update(Long id, BuyerRequestDto dto) {
-        Buyer b = repo.findById(id)
+        Buyer b = buyerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("구매거래처를 찾을 수 없습니다: " + id));
 
         b.changeBuyerComp(dto.getBuyerComp());
@@ -77,7 +69,6 @@ public class BuyerServiceImpl implements BuyerService {
     }
 
     // 삭제
-
     @Override
     @Transactional
     public void delete(Long id) {
@@ -95,6 +86,6 @@ public class BuyerServiceImpl implements BuyerService {
         partRepository.detachBuyerFromParts(id);
 
         // 4) 실제 삭제
-        repo.deleteById(id);
+        buyerRepository.deleteById(id);
     }
 }

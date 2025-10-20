@@ -6,6 +6,5 @@ import java.util.List;
 
 public interface PartStockService {
     List<PartStockResponseDto> getPartStocks();      // 목록 조회 (psNo/partName/psQty)
-    PartStockResponseDto getOne(Long psNo);          // 단건 조회
     PartStockResponseDto adjust(PartStockRequestDto req); // 증감 (낙관적 락)
 }

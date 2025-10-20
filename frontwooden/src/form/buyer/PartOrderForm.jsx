@@ -18,7 +18,7 @@ const PartOrderForm = ({
         <select
           name="buyerNo"
           value={formData.buyerNo ?? ""}
-          onChange={(e) => onSelectBuyer(Number(e.target.value))}
+          onChange={(e) => { onChange(e); onSelectBuyer(Number(e.target.value)) }}
           required
         >
           <option value="">-- 선택 --</option>
@@ -83,7 +83,6 @@ const PartOrderForm = ({
           onChange={handleInput}
         >
           <option value="입고대기">입고대기</option>
-          <option value="입고완료">입고완료</option>
         </select>
       </label>
 

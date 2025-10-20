@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/forecast")
 @RequiredArgsConstructor
 public class ForecastController {
-
+    // 비즈니스 로직은 전부 Service로 위임
     private final ForecastService forecastService;
 
     /**

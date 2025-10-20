@@ -9,17 +9,16 @@ export const OrderList = [
     {id: 1, name:"구매거래처",path:'buyer/buyercustomer'},
     {id: 2, name: "부품리스트", path:'buyer/partlist'},
     {id: 3, name:"부품발주",path:"buyer/partorder"},
-    {id: 4, name:"입고완료현황",path:"buyer/buyerdelivery"}
   ]
   export const PlanList = [
     {id:1, name:"상품리스트",path:"plan/itemlist"},
     {id:2, name:"생산리스트",path:"plan/planlist"},
-    {id:3, name:"BOM",path:"plan/bom"}
+    {id:3, name:"BOM", path:"plan/bomlist"},
   ]
   export const StockList = [
-    {id :1, name:"생산완료재고",path:"stock/itemstock"},
+    {id :1, name:"생산완료재고",path:"stock/stocklist"},
     { id: 2, name: "입고완료재고",   path: "stock/partstock" },
-    {id :3, name:"실제판매수량",path:"stock/sellamount"},
+    // {id :3, name:"실제판매수량",path:"stock/sellamount"},
   ]
 
 

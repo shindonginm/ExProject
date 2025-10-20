@@ -2,6 +2,7 @@ package com.springboot.wooden.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 
 @Entity(name = "OrderEntity")
@@ -24,7 +25,7 @@ public class Order {
 
     // 상품 FK
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_no", nullable = true) // 삭제 가능성을 대비해 null 허용
+    @JoinColumn(name = "item_no", nullable = true)
     private Item item;
 
     @Column(name = "order_qty", nullable = false)
@@ -48,38 +49,23 @@ public class Order {
     @Column(name = "cus_addr", length = 50, nullable = false)
     private String cusAddr;
 
+    // 출고
     @Column(name = "stock_applied", nullable = false)
-    private boolean stockApplied = false;
+    private boolean stockApplied; // 출고 반영 여부
 
-    // 판매처 스냅샷
-    @Column(name = "cus_comp_snapshot")
+    // 스냅샷 필드들 추가
+    @Column(name = "cus_comp_snapshot", length = 200)
     private String cusCompSnapshot;
 
-    // 상품 스냅샷
-    @Column(name = "item_name_snapshot")
+    @Column(name = "item_name_snapshot", length = 200)
     private String itemNameSnapshot;
 
-    @Column(name = "item_code_snapshot")
+    @Column(name = "item_code_snapshot", length = 100)
     private String itemCodeSnapshot;
 
-    @Column(name = "item_spec_snapshot")
+    @Column(name = "item_spec_snapshot", length = 300)
     private String itemSpecSnapshot;
 
-    public void changeCusCompSnapshot(String cusCompSnapshot) {
-        this.cusCompSnapshot = cusCompSnapshot;
-    }
-
-    public void changeItemNameSnapshot(String itemNameSnapshot) {
-        this.itemNameSnapshot = itemNameSnapshot;
-    }
-
-    public void changeItemCodeSnapshot(String itemCodeSnapshot) {
-        this.itemCodeSnapshot = itemCodeSnapshot;
-    }
-
-    public void changeItemSpecSnapshot(String itemSpecSnapshot) {
-        this.itemSpecSnapshot = itemSpecSnapshot;
-    }
 
     public void changeCustomer(Customer customer) { this.customer = customer; }
     public void changeItem(Item item) { this.item = item; }
@@ -90,4 +76,23 @@ public class Order {
     public void changeDeliveryDate(LocalDate deliveryDate) { this.deliveryDate = deliveryDate; }
     public void changeOrderDate(LocalDate orderDate) { this.orderDate = orderDate; }
     public void changeCusAddr(String cusAddr) { this.cusAddr = cusAddr; }
+    public boolean isStockApplied() { return stockApplied; }
+    public void markStockApplied() { this.stockApplied = true; }
+    // 스냅샷 세터(변경 메서드)
+    public void changeCusCompSnapshot(String value) { this.cusCompSnapshot = value; }
+    public void changeItemNameSnapshot(String v)  { if (this.itemNameSnapshot == null) this.itemNameSnapshot = v; }
+    public void changeItemCodeSnapshot(String v)  { if (this.itemCodeSnapshot == null) this.itemCodeSnapshot = v; }
+    public void changeItemSpecSnapshot(String v)  { if (this.itemSpecSnapshot == null) this.itemSpecSnapshot = v; }
+
+    // FK 끊기 전 안전 스냅샷 헬퍼
+    public void snapshotItemBeforeUnlink() {
+        if (this.item != null) {
+            changeItemNameSnapshot(this.item.getItemName());
+            // Item에 코드/스펙 필드가 실제로 있을 때만 사용
+            changeItemCodeSnapshot(this.item.getItemCode());
+            changeItemSpecSnapshot(this.item.getItemSpec());
+        }
+    }
+
 }
+

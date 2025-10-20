@@ -12,6 +12,7 @@ import com.springboot.wooden.repository.ItemRepository;
 import com.springboot.wooden.repository.ItemStockRepository;
 import com.springboot.wooden.repository.PartStockRepository;
 import com.springboot.wooden.repository.PlanRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,8 +81,15 @@ public class PlanServiceImpl implements PlanService {
 
     private void increaseItemStock(Item item, int qty) {
         ItemStock is = itemStockRepository.findById(item.getItemNo())
-                .orElseGet(() -> itemStockRepository.save(ItemStock.builder().item(item).isQty(0).build()));
-        is.changeQty(qty);
+                .orElseGet(() -> itemStockRepository.save(
+                        ItemStock.builder()
+                                .item(item)
+                                .isQty(0)
+                                .totalIn(0)
+                                .totalOut(0)
+                                .build()
+                ));
+        is.produce(qty);
     }
 
     // ===== 서비스 메서드 =====
@@ -98,15 +106,7 @@ public class PlanServiceImpl implements PlanService {
         return planRepository.findByPlanState("생산완료").stream().map(this::toDto).toList();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public PlanResponseDTO getOne(Long planNo) {
-        var p = planRepository.findById(planNo)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("생산계획 없음: " + planNo));
-        return toDto(p);
-    }
-
-    /** 등록: 생산중만 허용 + 등록 시 원자재 즉시 차감 + 날짜/수량 검증 */
+    // 등록: 생산중만 허용 + 등록 시 원자재 즉시 차감 + 날짜/수량 검증
     @Override
     @Transactional
     public PlanResponseDTO save(PlanRequestDTO dto) {
@@ -186,6 +186,30 @@ public class PlanServiceImpl implements PlanService {
         }
 
         return toDto(p);
+    }
+
+    @Override
+    @Transactional
+    public void patchStatus(Long planNo, String next) {
+        Plan p = planRepository.findById(planNo)
+                .orElseThrow(() -> new EntityNotFoundException("생산계획 없음 : " + planNo));
+
+        String before = p.getPlanState();
+        if(!"생산완료".equals(before) && "생산완료".equals(next)) {
+            // 최초 완료 전환될 때만 완제품 입고
+            Item item = p.getItem();
+            ItemStock itemStock = itemStockRepository.findById(item.getItemNo())
+                    .orElseGet(() -> itemStockRepository.save(
+                            ItemStock.builder()
+                                    .item(item)
+                                    .isQty(0)
+                                    .totalIn(0)
+                                    .totalOut(0)
+                                    .build()
+                    ));
+            itemStock.produce(p.getPlanQty());
+        }
+        p.changePlanState(next);
     }
 
     @Override

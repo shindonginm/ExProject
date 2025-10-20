@@ -21,11 +21,6 @@ public class PartStockController {
         return partStockService.getPartStocks();
     }
 
-    @GetMapping("/{psNo}")
-    public PartStockResponseDto getOne(@PathVariable Long psNo) {
-        return partStockService.getOne(psNo);
-    }
-
     @PatchMapping("/adjust")
     public PartStockResponseDto adjust(@RequestBody @Valid PartStockRequestDto req) {
         return partStockService.adjust(req);

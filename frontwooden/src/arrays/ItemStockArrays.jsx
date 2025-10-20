@@ -1,4 +1,10 @@
-// src/arrays/ItemStockListArray.jsx
+export const ItemStockColumns = [
+  { id: "itemName", label: "상품명", key: "itemName" },
+  { id: "isQty",    label: "현재재고", key: "isQty",    align: "right" },
+  { id: "totalIn",  label: "누적입고", key: "totalIn",  align: "right" },
+  { id: "totalOut", label: "누적출고", key: "totalOut", align: "right" },
+];
+
 export const ItemStockListArray = [
   { id: 1, clmn: "isNo",     content: "재고번호", input: "number" },
   { id: 2, clmn: "itemName", content: "품목명",   input: "text"   },

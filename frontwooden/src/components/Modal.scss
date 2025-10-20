@@ -1,0 +1,153 @@
+
+
+/* 모달창 관련 세팅 */
+.modal{
+    display: flex;
+    flex-direction: row-reverse;
+    width: 800px;
+    height: 650px;
+    background-color: whitesmoke;
+    border: 1px solid darkgray;
+    
+    border-radius: 30px;
+    position: absolute;
+    top:50%;left:50%;
+    z-index: 999;
+    transform: translate(-50%,-50%);
+    opacity: 0;
+    box-sizing: border-box;
+    transition: all 0.5s 0s ease-in-out;
+    pointer-events: none;
+    
+    .modal-wrapper{
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        padding: 10px 40px;
+        .modal-title { 
+        text-align: center;
+        }
+        .form-wrapper{
+            display: flex;
+            flex-direction: column;
+            height: 90%;
+            margin-top: 30px;
+            gap:20px;
+            position: relative;
+            p{
+            display: flex;
+            align-items: center;
+            justify-content:space-evenly;
+            input,select{
+                width: calc(50%);
+                height: 27px;
+                border: 1px solid;
+                border-radius: 5px;
+                text-align: center;
+            }
+            }
+        } 
+    }
+}
+
+
+
+// 모달 창 보이는 이벤트 관리
+.modal.show{
+    transform: translate(-50%,-50%);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+
+
+
+// 모달 창 바깥에 배경을 채워넣어 클릭 이벤트 방지용 backmodal class.
+.back-modal{
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000050;
+    position: absolute;
+    top: 0;left: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: all 0.5s 0s ease-in-out;
+    pointer-events: none;
+}
+// 백 그라운드 숨기기
+.back-modal.show{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+
+
+.form-child{
+    width: 80px;
+    font-size: 15px;
+}
+button{
+    display: inline-block;  
+    margin-left: 10px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 10px;
+    background-color: rgb(175, 146, 127);
+    transform: scale(1);
+    &.submit{
+        background-color: rgb(55, 55, 170);
+        color: white;
+        position: absolute;
+        bottom: 5%;
+        right: 5%;
+    }
+    &.fixbtn{
+        background-color: rgb(76, 150, 76);
+    }
+    &.delbtn{
+        background-color: rgb(178, 38, 16);
+        color: white;
+    }
+    &:hover{
+        transform: scale(1.1);
+        filter: drop-shadow(2px 2px 2px rgb(0,0,0,0.5));
+        transition: all 0.3s 0s linear;
+    }
+}
+
+.closeBtn{
+        display: inline-block;
+        width: 5%;
+        height: 7%;
+        border: none;
+        border-radius: 10px;
+        margin: 15px 15px 0 0;
+        position: relative;
+        background-color: unset;
+        transform: rotate(0);
+        &::after,&::before{
+            content: "";
+            display: block;
+            width: 2px;
+            height: 20px;
+            background-color: black;
+            position: absolute;
+            top:50%;left:50%;
+            transform: translate(-45%,-45%) rotate(45deg);
+        }
+        &::before{
+            transform: translate(-45%,-45%) rotate(-45deg);
+        }
+        &:hover{
+            transform: rotate(360deg);
+            transition: all 1s ease-in-out;
+        }
+    }

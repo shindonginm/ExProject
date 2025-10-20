@@ -24,13 +24,6 @@ public class PartStockServiceImpl implements PartStockService {
         return partRepository.findPartStockView();
     }
 
-    @Override
-    public PartStockResponseDto getOne(Long psNo) {
-        PartStock ps = partStockRepository.findById(psNo)
-                .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다. psNo=" + psNo));
-        return toDto(ps);
-    }
-
     @Transactional
     @Override
     public PartStockResponseDto adjust(PartStockRequestDto req) {

@@ -14,38 +14,32 @@ import java.util.List;
 @RequestMapping("/api/buyer/buyercustomer")
 @RequiredArgsConstructor
 public class BuyerController {
-
+    // 비즈니스 로직은 전부 Service로 위임
     private final BuyerService buyerService;
 
-    // 목록
+    // Buyer 목록 조회
     @GetMapping
     public List<BuyerResponseDto> list() {
         return buyerService.findAll();
     }
-
-    // 단건
-    @GetMapping("/{buyerNo}")
-    public BuyerResponseDto getOne(@PathVariable Long buyerNo) {
-        return buyerService.getOne(buyerNo);
-    }
-
-    // 추가
+    // Buyer 등록
     @PostMapping
     public ResponseEntity<BuyerResponseDto> createBuyer(@RequestBody @Valid BuyerRequestDto dto) {
         return ResponseEntity.ok(buyerService.save(dto));
     }
-
-    // 수정
+    // Buyer 수정
     @PutMapping("/{buyerNo}")
     public ResponseEntity<BuyerResponseDto> update(@PathVariable Long buyerNo,
                                                    @RequestBody @Valid BuyerRequestDto dto) {
         return ResponseEntity.ok(buyerService.update(buyerNo, dto));
     }
-
-    // 삭제
+    // Buyer 삭제
     @DeleteMapping("/{buyerNo}")
     public ResponseEntity<Void> delete(@PathVariable Long buyerNo) {
         buyerService.delete(buyerNo);
         return ResponseEntity.noContent().build();
     }
 }
+
+// Buyer 에 대해 조회/등록/수정/삭제를 담당하는 REST 컨트롤러
+// URL은 /api/buyer/buyercustomer 으로 정리돼 있고, 서비스에 일을 시키는 포워더 역할만 수행

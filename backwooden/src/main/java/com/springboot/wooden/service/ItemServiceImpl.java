@@ -1,3 +1,4 @@
+// service/ItemServiceImpl.java
 package com.springboot.wooden.service;
 
 import com.springboot.wooden.domain.Item;
@@ -29,14 +30,6 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.findAll().stream()
                 .map(this::toDto)
                 .toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ItemResponseDto getOne(Long itemNo) {
-        Item it = itemRepository.findById(itemNo)
-                .orElseThrow(() -> new EntityNotFoundException("상품 없음: " + itemNo));
-        return toDto(it);
     }
 
     @Override
@@ -77,9 +70,10 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional
     public void delete(Long itemNo) {
-        if (orderRepository.existsUncompletedByItem(itemNo)) {
+        if (orderRepository.existsByItem_ItemNoAndOrderDeliStateNot(itemNo, "납품완료")) {
             throw new IllegalStateException("삭제 불가: 납품이 완료되지 않은 주문이 존재합니다.");
         }
+
         // 완료 주문 스냅샷 → FK 해제
         for (Order o : orderRepository.findAllByItem_ItemNo(itemNo)) {
             if ("승인완료".equals(o.getOrderState()) && "납품완료".equals(o.getOrderDeliState())) {
@@ -91,8 +85,14 @@ public class ItemServiceImpl implements ItemService {
                 o.changeItem(null);
             }
         }
-        // BOM/Stock 선정리 후 Item 삭제
+        // 재고행 선삭제
+        itemStockRepository.deleteById(itemNo);
+
+        // BOM/Plan 등 정리
         bomRepository.deleteByItemNo(itemNo);
+        // planRepository도 FK 있으면 정리 필요. (없으면 패스)
+
+        // 마지막으로 아이템 삭제
         itemRepository.deleteById(itemNo);
     }
 

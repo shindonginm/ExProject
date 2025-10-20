@@ -1,6 +1,5 @@
 package com.springboot.wooden.controller;
 
-import com.springboot.wooden.dto.OrderListRow;
 import com.springboot.wooden.dto.OrderRequestDto;
 import com.springboot.wooden.dto.OrderResponseDto;
 import com.springboot.wooden.dto.OrderStatusUpdateDto;
@@ -14,38 +13,25 @@ import java.util.List;
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
-
+    // 비즈니스 로직은 전부 Service로 위임
     private final OrderService orderService;
 
-    // 전체 주문 조회
+    // Order 목록 조회
     @GetMapping
     public List<OrderResponseDto> getOrders() {
         return orderService.getAllOrders();
     }
-
-    // 스냅샷 기반 주문리스트
-    @GetMapping("/list")
-    public List<OrderListRow> getOrderList() {
-        return orderService.getOrderList(); // Repository의 findOrderListRows() 호출
-    }
-
-    @GetMapping("/{orderNo}")   // ✅ 단건은 orderNo로!
-    public OrderResponseDto getOne(@PathVariable Long orderNo) {
-        return orderService.getOne(orderNo);
-    }
-
-    @GetMapping("/company/{company}") // 회사명으로는 목록 반환
+    // 판매 거래처명으로 조회
+    @GetMapping("/company/{company}")
     public List<OrderResponseDto> getByCompany(@PathVariable String company) {
         return orderService.getAllByCompany(company);
     }
-
-    // 주문 등록
+    // Order 등록
     @PostMapping
     public OrderResponseDto addOrder(@RequestBody OrderRequestDto dto) {
         return orderService.register(dto); // saveOrder → register
     }
-
-    // 주문 수정
+    // Order 수정
     @PutMapping("/{orderNo}")
     public OrderResponseDto updateOrder(
             @PathVariable Long orderNo,
@@ -53,7 +39,7 @@ public class OrderController {
         return orderService.update(orderNo, dto);
     }
 
-    // 상태 변경
+    // Order 상태 변경
     @PatchMapping("/{id}/status")
     public OrderResponseDto patchStatus(
             @PathVariable Long id,
@@ -73,3 +59,5 @@ public class OrderController {
         orderService.delete(orderNo);
     }
 }
+
+// 주문 CRUD + 상태변경 + 조건조회(회사명, 완료건)를 OrderService에 위임해 처리하는 REST 엔드포인트
