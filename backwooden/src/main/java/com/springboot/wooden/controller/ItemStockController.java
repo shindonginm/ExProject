@@ -12,7 +12,7 @@ import java.util.List;
 
 
 /**
- * 재고(완제품) 조회/조정 엔드포인트
+ * 재고(완제품) 조회/조정 컨트롤러
  * - 목록/단건 조회는 GET
  * - 재고 증감(입고/출고/손익조정 등)은 PATCH /adjust 로 처리
  * - 실제 계산/검증/트랜잭션은 Service가 담당
@@ -25,7 +25,7 @@ public class ItemStockController {
     // 비즈니스 로직은 전부 Service로 위임
     private final ItemStockService itemStockService;
 
-    // Item 목록 조회
+    // ItemStock 목록 조회
     @GetMapping
     public List<ItemStockResponseDto> list() {
         return itemStockService.getItemStocks();

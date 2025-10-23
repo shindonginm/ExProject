@@ -87,67 +87,76 @@ form{
     justify-content: center;
 }
 
-
-
-
 .form-child{
     width: 80px;
     font-size: 15px;
 }
-button{
-    display: inline-block;  
-    margin-left: 10px;
-    padding: 10px 25px;
-    border: none;
-    border-radius: 10px;
-    background-color: rgb(175, 146, 127);
-    transform: scale(1);
-    &.submit{
-        background-color: rgb(55, 55, 170);
-        color: white;
-        position: absolute;
-        bottom: 5%;
-        right: 5%;
+
+
+
+
+
+@keyframes blowUp{
+    from{
+        transform: translateY(150px);
     }
-    &.fixbtn{
-        background-color: rgb(76, 150, 76);
+    to{
+        transform: translateY(0);
     }
-    &.delbtn{
-        background-color: rgb(178, 38, 16);
-        color: white;
+}
+.guidemenu-title{
+    margin-top: 2%;
+    height: 60px;
+    overflow: hidden;
+    span{
+        display: inline-block;
+        font-size: 45px;
+        position: relative;
+        transform: translateY(150px);
+        &.up{
+        animation: blowUp 1s 0.4s linear forwards;
+        }
+        @for $items from 1 through 8{
+            &:nth-child(#{$items}){
+                animation-delay: $items * 0.2s;
+            }
+        }
     }
-    &:hover{
-        transform: scale(1.1);
-        filter: drop-shadow(2px 2px 2px rgb(0,0,0,0.5));
-        transition: all 0.3s 0s linear;
+}
+@keyframes lineSetting {
+    from{
+        transform: scaleX(0);
+    }
+    to{
+        transform: scaleX(1);
+    }
+}
+.linebar{
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 35px;
+    opacity: 0;
+    &.set{
+        opacity: 1;
+        span{
+            display: block;
+            width: 100%;
+            height: calc(3px);
+            border-radius: 5px;
+            background-color: black;
+            transform: scaleX(0);
+            &.set{
+                animation: lineSetting 1s 2.5s ease-in-out forwards;
+            }
+        }
     }
 }
 
-.closeBtn{
-        display: inline-block;
-        width: 5%;
-        height: 7%;
-        border: none;
-        border-radius: 10px;
-        margin: 15px 15px 0 0;
-        position: relative;
-        background-color: unset;
-        transform: rotate(0);
-        &::after,&::before{
-            content: "";
-            display: block;
-            width: 2px;
-            height: 20px;
-            background-color: black;
-            position: absolute;
-            top:50%;left:50%;
-            transform: translate(-45%,-45%) rotate(45deg);
-        }
-        &::before{
-            transform: translate(-45%,-45%) rotate(-45deg);
-        }
-        &:hover{
-            transform: rotate(360deg);
-            transition: all 1s ease-in-out;
-        }
-    }
+// 기타
+form.form-content{
+    gap: 20px;
+}

@@ -41,19 +41,22 @@ export default function OrderApprovePage() {
         <BackButtonComponent text="<  이전페이지" onClick={() => nav(-1)} />
         <h2 style={{ textAlign: "center" }}>주문완료현황</h2>
 
-        <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+        <div className="top-searchbar">
             <SearchComponent
                 value={q}
                 onChange={setQ}
                 onDebounced={setTerm}
                 delay={300}
                 minLength={0}
-                placeholder="판매처명 검색"
+                placeholder="판매처명"
                 className="border rounded px-3 py-2"
             />
-        </div>
 
-        {loading ? (
+            <button onClick={load} className="refresh">새로고침</button>
+
+        </div>
+        <div className="table-wrapper">
+            {loading ? (
             <div style={{ textAlign: "center", padding: 20 }}>불러오는 중</div>
         ) : (
             <table>
@@ -83,10 +86,10 @@ export default function OrderApprovePage() {
             </tbody>
         </table>
     )}
-
-        <div style={{ textAlign: "right", marginTop: 12 }}>
-            <button onClick={load}>새로고침</button>
         </div>
+        
+
+        
     </div>
     );
 }

@@ -9,10 +9,11 @@ import SearchComponent from "../../components/SearchComponent.jsx"; // ✅ 추�
 
 import BomForm from "../../form/plan/BomForm.jsx";
 
-import { getBomList, createBom, updateBom, deleteBom } from "../../api/BomAPI";
+import { getBomList, createBom, updateBom, deleteBom } from "../../api/BomAPI.jsx";
 import { getItemList } from "../../api/ItemListAPI";
 import { getPartList } from "../../api/PartListAPI";
 import { BomArrays } from "../../arrays/BomArrays.jsx";
+import { el } from "date-fns/locale";
 
 const initBomForm = () => ({
   bomId: null,
@@ -119,7 +120,7 @@ const BomListPage = () => {
     e?.stopPropagation?.();
   };
 
-  // ✅ 재조회 일원화
+  // 재조회 일원화
   const refetch = async () => {
     try {
       const list = await getBomList();
@@ -133,12 +134,14 @@ const BomListPage = () => {
   const doCreate = async (e) => {
     stop(e);
     const ok = await handleCreate();
-    if (!ok) {
-      alert("등록 중 오류");
-      return;
+    if (ok) {
+      await refetch();
+      closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
     }
-    await refetch();
-    closeCreate();
+    
   };
 
   // BOM 수정
@@ -152,15 +155,22 @@ const BomListPage = () => {
     if (ok) {
       await refetch();
       closeEdit();
+      alert("수정 완료");
+    } else {
+      alert("수정 실패");
     }
   };
 
   // BOM 삭제
   const doDelete = async (e) => {
     stop(e);
-    await handleDelete();
-    await refetch();
-    closeEdit();
+    const ok = await handleDelete();
+    if (ok !== false) {
+      await refetch();
+      closeEdit();
+    } else {
+      alert("삭제 실패");
+    }    
   };
 
   // 상품명만으로 필터 (itemName이 표준. 컬럼명이 다르면 후보로 대체)
@@ -178,7 +188,7 @@ const BomListPage = () => {
       <h2 style={{ textAlign: "center" }}>BOM 목록</h2>
 
       {/* 상단 툴바: 상품명 검색 + 새로고침 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
@@ -188,22 +198,42 @@ const BomListPage = () => {
           placeholder="검색"
           className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="refresh" />
       </div>
 
-      <table>
+      <div className="table-wrapper">
+        <table>
         <thead>
           <tr>{BomArrays.map((c) => <th key={c.id}>{c.label}</th>)}</tr>
         </thead>
         <tbody>
           {filtered?.length ? (
             filtered.map((row) => (
-              <tr key={row.bomId} onClick={() => openEdit(row)} className="row">
-                {BomArrays.map((c) => (
-                  <td key={c.id} style={{ textAlign: c.align || "left" }}>
-                    {row[c.key]}
-                  </td>
-                ))}
+              <tr key={row.bomId} className="row">
+                {BomArrays.map((c) => {
+                  // 1 ) 완제품(상품명) 으로 수정 폼 오픈
+                  if (c.key === "itemName") {
+                    return (
+                      <td 
+                        key={c.id} 
+                        style={{ textAlign: c.align || "right", 
+                          color: "blue", 
+                          textDecoration: "underline",
+                          cursor: "pointer"
+                        }}
+                        onClick={() => openEdit(row)}
+                      >
+                        {row[c.key]}
+                      </td>
+                    );                    
+                  }
+                  
+                  return (
+                    <td key={c.id} style={{textAlign: c.align || "right"}}>
+                      {row[c.key]}
+                    </td>
+                  );
+                })}
               </tr>
             ))
           ) : (
@@ -216,6 +246,8 @@ const BomListPage = () => {
         </tbody>
       </table>
 
+      </div>
+      
       <br />
       {/* 공용 버튼이므로 onClick만 사용 */}
       <ButtonComponent onClick={openCreate} text="BOM 등록" cln="submit" />
@@ -227,7 +259,6 @@ const BomListPage = () => {
         title="BOM 등록"
         onConfirm={doCreate}
       >
-        <form onSubmit={stop}>
           <BomForm
             formData={formData}
             onChange={handleChange}
@@ -237,7 +268,6 @@ const BomListPage = () => {
           <div className="btn-wrapper">
             <ButtonComponent text="등록" onClick={doCreate} cln="submit" />
           </div>
-        </form>
       </ModalComponent>
 
       {/* 수정/삭제 */}
@@ -248,18 +278,18 @@ const BomListPage = () => {
         onConfirm={doUpdate}
       >
         {selectedItem && (
-          <form onSubmit={stop}>
+
             <BomForm
               formData={formData}
               onChange={handleChange}
               itemOptions={itemOptions}
               partOptions={partOptions}
-            />
+            >
             <div className="btn-wrapper">
               <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />
               <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />
             </div>
-          </form>
+            </BomForm>
         )}
       </ModalComponent>
     </div>

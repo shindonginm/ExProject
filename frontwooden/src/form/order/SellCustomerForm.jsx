@@ -2,7 +2,7 @@
 import { sellCustomerArray } from "../../arrays/SellerCustomerArray";
 
 
-const SellCustomerForm = ({ formData, onClose, onSubmit,onChange }) => {
+const SellCustomerForm = ({ formData, onClose, onSubmit,onChange,children }) => {
   
   return (
     <div className="form-wrapper">
@@ -20,7 +20,7 @@ const SellCustomerForm = ({ formData, onClose, onSubmit,onChange }) => {
           </p>
         </div>
       ))}
-      
+      {children}
     </div>
   );
 };

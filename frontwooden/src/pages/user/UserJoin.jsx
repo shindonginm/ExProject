@@ -1,3 +1,4 @@
+import "./UserLogin.scss";
 import { useEffect, useState } from "react";
 import { getUserInfo,createUserInfo } from "../../api/user/signupAPI";
 import ButtonComponent from "../../components/ButtonComponent";
@@ -15,6 +16,7 @@ export default function UserJoin(){
   const [ checkPw, setCheckPw ] = useState(false);
   const [ input, setInput ] = useState("");
   const [ ckinput,setCkInput ] = useState(""); 
+  const [ onFocus, setOnFocus ] = useState(false);
   const navigate = useNavigate();
 
 
@@ -49,35 +51,55 @@ export default function UserJoin(){
 
 
   return(
-    <div>
-      Join
-      <form action="">
+    <div className="page-wrapper login">
+      <div className="login-content">
+        <div className="loginpage-wrapper">
+        <h1>JOIN</h1>
+        <form action="">
         { UserArrays.slice(0,4).map((list,idx) => (
           <label htmlFor="" 
           name={list.name}
           key={idx}
           >
-            <span>{list.name}</span>
-            
             { list.value === "password" ? 
+            <>
             <input type={list.type} 
             name={list.value}
+            placeholder={list.name}
             onChange={(e) => {passwordChecked(e); handleChange(e);}}
-            
             />
+            <p style={{ 
+              position:"absolute",
+              top:"-20px",
+              right:"31%",
+              color:"red",
+              fontSize:"13px"}}
+              >
+                비밀번호는 8자이상이여야 합니다.
+              </p>
+            </>
+            
             : list.value === "checkPassword" ? 
             <>
             <input type={list.type} 
             name={list.value}
             onChange={checkingUserPw}
+            placeholder={list.name}
+            onFocus={() => setOnFocus(true)}
+            onBlur={() => setOnFocus(false)}
             disabled={!pw}
             />
-            <p>{checkPw ? "비밀번호 일치": "비밀번호 불일치"}</p>
+            <p 
+            className={"isChecking"+(onFocus ? " float":"") + (checkPw ? " rightPw":" wrongPw")}
+            >
+              {checkPw ? "비밀번호 일치": "비밀번호 불일치"}
+            </p>
             </>
             :
             <input type={list.type} 
             name={list.value}
             value={formData[list.value] || ""}
+            placeholder={list.name}
             onChange={handleChange}
             />
             }
@@ -91,9 +113,18 @@ export default function UserJoin(){
             handleCreate();
             navigate("/login");
           }
-          } disable={!checkPw}/>
+          } disable={!checkPw}
+          cln={"join"}
+          style={{right:"52%",bottom:"7%"}}/>
+          <ButtonComponent text={"로그인창으로"}
+          onClick={(e) => {e.preventDefault(); navigate("/login")}}
+          cln={"login"} style={{right:"22%",bottom:"7%"}}/>
       </form>
+      </div>
+      
       
     </div>
+      </div>
+      
   )
 }

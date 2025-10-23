@@ -80,8 +80,9 @@ return(
                     />
                     </p>
                     <Link onClick = { (e)=> {
+                        e.preventDefault()
                         setOpenSideSet(true);
-                        e.preventDefault()}}
+                        }}
                         className="hamburger">
                         <span>{/*햄버거메뉴*/}</span>
                         <span>{/*햄버거메뉴*/}</span>

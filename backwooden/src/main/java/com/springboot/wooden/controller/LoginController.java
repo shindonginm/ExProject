@@ -24,11 +24,9 @@ public class LoginController {
      */
     @PostMapping
     public LoginResponseDTO login(@RequestBody LoginRequestDto request) {
-
         try {
             // 서비스에서 아이디/비밀번호 검증. 성공 시 사용자 정보/메시지 반환
             LoginResponseDTO response = loginService.login(request);
-
             // 성공 케이스는 그대로 포맷 맞춰 반환
             return new LoginResponseDTO(
                     true,

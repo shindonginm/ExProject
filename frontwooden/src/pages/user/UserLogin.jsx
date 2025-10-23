@@ -1,6 +1,7 @@
+import "./UserLogin.scss"
+import "../../components/Modal.scss";
 import { useState } from "react";
 import { LoginAPI } from "../../api/user/userAPI";
-import BackButtonComponent from "../../components/BackButtonComponent";
 import { useCRUD } from "../../hook/useCRUD";
 import { useNavigate } from "react-router-dom";
 import { initForms } from "../../arrays/TableArrays";
@@ -14,7 +15,6 @@ const api = {
 
 const UserLogin = () => {
     const navigate = useNavigate();
-    const { goBackBtn } = useEvent();
     
     const loginValues = {}
     
@@ -40,21 +40,20 @@ const UserLogin = () => {
 
 
     return(
-    <div className="page-wrapper">
-        <div className="topbar">
-            <BackButtonComponent text={"뒤로가기"} onClick={goBackBtn}/>
+    <div className="page-wrapper login">
+        <div className="login-content">
+            <LoginComponent
+            loginParam={loginParam}
+            setLoginParam={setLoginParam}
+            handleChange={handleChange}
+            formData={formData}
+            doLogin={doLogin}
+            moveToPath={moveToPath}
+            navigate={navigate}
+            isLoggedIn={isLoggedIn}
+            setIsLoggedIn={setIsLoggedIn}
+            />
         </div>
-        <LoginComponent
-        loginParam={loginParam}
-        setLoginParam={setLoginParam}
-        handleChange={handleChange}
-        formData={formData}
-        doLogin={doLogin}
-        moveToPath={moveToPath}
-        navigate={navigate}
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={setIsLoggedIn}
-        />
     </div>
 )
 

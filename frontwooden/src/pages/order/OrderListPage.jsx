@@ -145,6 +145,7 @@ useEffect(() => {
     return f ? f.value : "";
   };
 
+  // 컬럼명으로 클릭 가능하게 함
   const handleRowClick = (row) => {
     openEdit(row); // 기존 데이터 세팅
     // 이름만 있던 필드를 ID 로 채워줌
@@ -176,6 +177,9 @@ useEffect(() => {
     if (ok) {
       await reloadOrders();
       closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
     }
   };
   const handleUpdateAndRefresh = async () => {
@@ -183,6 +187,9 @@ useEffect(() => {
     if (ok) {
       await reloadOrders();
       closeEdit();
+      alert("수정 완료");
+    } else {
+      alert("수정 실패");
     }
   };
 
@@ -200,7 +207,7 @@ const onPatchOrderState = async (id, next) => {
     const updated = await updateOrderStatus(id, { orderState: next });
     const patch = { orderState: updated?.orderState ?? next };
 
-    // ② 완료 판단
+    // 완료 판단
     if (computeCompletion(prevRow, patch)) {
       // 완료면 목록에서 제거하고 이동
       setOrderList(list => list.filter(r => r.orderNo !== id));
@@ -282,21 +289,22 @@ const onPatchOrderState = async (id, next) => {
       <h2 style={{ textAlign: "center" }}>상품주문서</h2>
 
       {/* 판매처명 검색 + 새로고침 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
           onDebounced={setTerm}
           delay={300}
           minLength={0}
-          placeholder="검색"
+          placeholder="판매처명"
           className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={reloadOrders} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={reloadOrders} text="새로고침" cln="refresh" />
       </div>
 
       {/* 테이블 */}
-      <table>
+      <div className="table-wrapper">
+          <table>
         <thead>
           <tr>
             {OrderListArr.map(col => (
@@ -305,78 +313,76 @@ const onPatchOrderState = async (id, next) => {
           </tr>
         </thead>
 
-        {/* 1) 행 onClick 제거 */}
         <tbody>
           {filtered?.length ? (
             filtered.map(row => (
               <tr key={row.orderNo} className="row">
                 {OrderListArr.map(col => {
-                  // 1) 총금액 계산 표기
+                  // 총금액 계산 표기
                   if (col.clmn === "totalPrice") {
                     const qty   = Number(row.orderQty ?? 0);
                     const price = Number(row.orderPrice ?? 0);
-                    const total = Number(row.totalPrice ?? 0) || (qty * price);
+                    const total = Number(row.totalPrice ?? 0) || qty * price;
                     return <td key={col.id}>{total.toLocaleString()}</td>;
                   }
-
-                  // 2) 주문상태 드롭다운(버블링 차단)
+                  // 2) 주문상태 드롭다운: 버블링 차단
                   if (col.clmn === "orderState") {
                     return (
-                      <td key={col.id} onClick={(e)=>e.stopPropagation()}>
+                      <td key={col.id} onClick={(e) => e.stopPropagation()}>
                         <InlineSelectCell
                           rowKey={row.orderNo}
                           value={row.orderState}
                           options={["승인대기", "승인완료"]}
                           onPatch={onPatchOrderState}
-                      />
+                        />
                       </td>
                     );
                   }
-
-                  // 3) 납품상태 드롭다운(버블링 차단)
+                  // 2) 납품상태 드롭다운: 버블링 차단
                   if (col.clmn === "orderDeliState") {
                     return (
-                      <td key={col.id} onClick={(e)=>e.stopPropagation()}>
+                      <td key={col.id} onClick={(e) => e.stopPropagation()}>
                         <InlineSelectCell
                           rowKey={row.orderNo}
                           value={row.orderDeliState}
                           options={["납품대기", "납품완료"]}
                           onPatch={onPatchDeliState}
-                      />
+                        />
                       </td>
                     );
                   }
-
-                  // 4) 판매처명만 파란 밑줄 버튼으로 수정폼 오픈
+                  // 3) 판매처명만 클릭으로 수정폼 오픈
                   if (col.clmn === "cusComp") {
                     return (
-                      <td 
-                        key={`${row.orderNo}-${col.id}`}
-                        style={
-                          col.clmn === "cusComp"
-                          ? { color: "blue", textDecoration: "underline", cursor: "pointer" }
-                          : {}
-                        }
-                        onClick={() => handleRowClick(row)}  
+                      <td
+                        key={col.id}
+                        style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                        onClick={() => handleRowClick(row)}
                       >
-                        {row[col.clmn] ?? ""}
+                        {row[col.clmn]}
                       </td>
                     );
                   }
 
-                  // 5) 나머지 일반 셀
+                  // 일반 셀
                   return <td key={col.id}>{row[col.clmn]}</td>;
                 })}
               </tr>
-              ))
-              ) : (
-
+            ))
+          ) : (
               <tr>
-                <td colSpan={58} style={{ textAlign: "center" }}>데이터가 없습니다.</td>
+                <td colSpan={OrderListArr.length} style={{ textAlign: "center" }}>
+                  데이터가 없습니다.
+                </td>
               </tr>
           )}
         </tbody>
+
+
+
       </table>
+      </div>
+      
 
       {/* 등록 버튼 */}
       <br />

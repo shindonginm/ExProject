@@ -3,7 +3,8 @@ const BomForm = ({
   formData,              // { bomId?, itemNo, partNo, qtyPerItem }
   onChange,              // e.target.name / e.target.value 기반 setState
   itemOptions,           // [{value:itemNo, label:itemName}, ...]
-  partOptions            // [{value:partNo,  label:partName}, ...]
+  partOptions,            // [{value:partNo,  label:partName}, ...]
+  children
 }) => {
 
   const handleSmart = (e) => {
@@ -50,6 +51,7 @@ const BomForm = ({
           />
         </p>
       </div>
+      {children}
     </div>
   );
 };

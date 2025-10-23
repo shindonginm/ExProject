@@ -5,7 +5,7 @@ const UserInfoCard = ({loginState,doLogout,userName}) => {
       {loginState ? 
       <>
         <p>
-          <div className="userName?">
+          <div className="userName">
             <span><strong>{userName}</strong>님 안녕하세요!</span>
           </div>
           <span

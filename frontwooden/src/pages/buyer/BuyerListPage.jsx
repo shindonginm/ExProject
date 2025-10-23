@@ -92,7 +92,7 @@ const SellerCustomerListPage = () => {
     );
   }, [buyerCustomer, term]);
 
-  // 기본 submit/버블 방지
+  // 기본 submit 방지
   const stop = (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
@@ -102,25 +102,37 @@ const SellerCustomerListPage = () => {
   const doCreate = async (e) => {
     stop(e);
     const ok = await handleCreate();
-    if (!ok) return;
-    await refetch();
-    closeCreate();
+    if (ok) {
+      await refetch();
+      closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
+    }
   };
 
   const doUpdate = async (e) => {
     stop(e);
     const ok = await handleUpdate();
-    if (!ok) return;
-    await refetch();
-    closeEdit();
+    if (ok) {
+      await refetch();
+      closeEdit();
+      alert("수정 완료")
+    } else {
+      alert ("수정 실패");
+    }
+    
   };
 
   const doDelete = async (e) => {
     stop(e);
     const ok = await handleDelete();
-    if (!ok) return;
-    await refetch();
-    closeEdit();
+    if (ok !== false) {
+      await refetch();
+      closeEdit();
+    } else {
+      alert("삭제 실패");
+    }
   };
 
   return (
@@ -129,7 +141,7 @@ const SellerCustomerListPage = () => {
       <h2 style={{ textAlign: "center" }}>구매거래처</h2>
 
       {/* 상단 툴바: 구매처명 검색 + 새로고침 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
@@ -139,11 +151,11 @@ const SellerCustomerListPage = () => {
           placeholder="구매처명 검색"
           className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="refresh" />
       </div>
 
-      {/* 테이블 */}
-      <table>
+      <div className="table-wrapper">
+        <table>
         <thead>
           <tr>
             {buyerCustomerArray.map((col) => (
@@ -179,6 +191,8 @@ const SellerCustomerListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
 
       {/* 등록 버튼 */}
       <br />
@@ -190,6 +204,7 @@ const SellerCustomerListPage = () => {
         onClose={closeCreate}
         title="구매거래처 등록"
         onConfirm={doCreate}
+        stop={stop}
       >
         <BuyerCustomerForm formData={formData} onChange={handleChange} onSubmit={doCreate}>
           <div className="btn-wrapper">

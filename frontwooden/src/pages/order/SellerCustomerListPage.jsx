@@ -52,6 +52,47 @@ const SellerCustomerListPage = () => {
     const data = await getCustomer();
     setItems(Array.isArray(data) ? data : []);
   }
+  // 기본 submit 방지
+  const stop = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+  };
+
+  // CRUD 래퍼: 성공 시 재조회
+  const doCreate = async (e) => {
+    stop(e);
+    const ok = await handleCreate();
+    if (ok) {
+      await refetch();
+      closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
+    }
+  };
+
+  const doUpdate = async (e) => {
+    stop(e);
+    const ok = await handleUpdate();
+    if (ok) {
+      await refetch();
+      closeEdit();
+      alert("수정 완료");
+    } else {
+      alert("수정 실패");
+    } 
+  };
+
+  const doDelete = async (e) => {
+    stop(e);
+    const ok = await handleDelete();
+    if (ok !== false) {
+      await refetch();
+      closeEdit();
+    } else {
+      alert("삭제 실패");
+    }
+  };
 
   useEffect(() => {
     refetch();
@@ -74,21 +115,22 @@ const SellerCustomerListPage = () => {
       <h2 style={{ textAlign: "center" }}>판매거래처 리스트</h2>
 
       {/* 판매처명 검색 + 새로고침 */}
-      <div  style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0"}}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
           onDebounced={setTerm}
           delay={300}
           minLength={0}
-          placeholder="검색"
+          placeholder="판매처명"
           className="border rounded px-3 py-2"  
         />
-        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="refresh" />
       </div>
 
       {/* 테이블 */}
-      <table>
+      <div className="table-wrapper">
+        <table>
         <thead>
           <tr>
             {sellCustomerArray.map(col => <th key={col.id}>{col.content}</th>)}
@@ -97,13 +139,16 @@ const SellerCustomerListPage = () => {
         <tbody>
           {filtered && filtered.length > 0 ? (
             filtered.map(row => (
-              <tr key={row.cusNo} className="row" onClick={() => openEdit(row)}>
+              <tr key={row.cusNo} className="row">
                 {sellCustomerArray.map(col => (
                   <td
-                    key={col.id}
-                    style={col.clmn === "cusComp" ? { color: "blue", textDecoration: "underline", cursor: "pointer" } : {}}
+                    key={`${row.cusNo}-${col.id}`}
+                    style={col.clmn === "cusComp" ? 
+                      { color: "blue", textDecoration: "underline", cursor: "pointer" } : {}
+                    }
+                    onClick={() => col.clmn === "cusComp" && openEdit(row)}
                   >
-                    {row[col.clmn]}
+                    {row[col.clmn] ?? ""}
                   </td>
                 ))}
               </tr>
@@ -117,6 +162,8 @@ const SellerCustomerListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
 
       <br />
       <ButtonComponent onClick={openCreate} text="거래처 등록" cln="submit" />
@@ -126,12 +173,11 @@ const SellerCustomerListPage = () => {
         isOpen={isCreateOpen}
         onClose={closeCreate}
         title="거래처 등록"
-        onConfirm={handleCreate}
+        onConfirm={doCreate}
       >
-        <SellCustomerForm formData={formData} onChange={handleChange} />
-        <div className="btn-wrapper">
-          <ButtonComponent text="등록" onClick={handleCreate} cln="submit" />
-        </div>
+        <SellCustomerForm formData={formData} onChange={handleChange}>
+          <ButtonComponent text="등록" onClick={doCreate} cln="submit" />
+        </SellCustomerForm>
       </ModalComponent>
 
       {/* 수정/삭제 모달: '완료(수정)' 버튼 + '삭제' 버튼 */}
@@ -139,17 +185,18 @@ const SellerCustomerListPage = () => {
         isOpen={isEditOpen}
         onClose={closeEdit}
         title="거래처 수정/삭제"
-        onConfirm={handleUpdate}
+        onConfirm={doUpdate}
       >
         {selectedItem && (
           <>
-            <SellCustomerForm formData={formData} onChange={handleChange} />
-            <div className="btn-wrapper">
+            <SellCustomerForm 
+              formData={formData} 
+              onChange={handleChange}>
               {/* 완료 버튼 = 수정 */}
-              <ButtonComponent text="완료" onClick={handleUpdate} cln="fixbtn" />
+              <ButtonComponent text="완료" onClick={doUpdate} cln="fixbtn" />
               {/* 삭제 버튼 */}
-              <ButtonComponent text="삭제" onClick={handleDelete} cln="delbtn" />
-            </div>
+              <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />
+            </SellCustomerForm>
           </>
         )}
       </ModalComponent>

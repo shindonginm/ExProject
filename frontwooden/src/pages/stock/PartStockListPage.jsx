@@ -6,8 +6,11 @@ import { PartStockListArray } from "../../arrays/PartStockListArray";
 import { partOrderArrays } from "../../arrays/partOrderArrays";
 import { getCompletedPartOrders } from "../../api/PartOrderAPI";
 import SearchComponent from "../../components/SearchComponent";
+import BackButtonComponent from "../../components/BackButtonComponent";
+import { useNavigate } from "react-router-dom";
 
 const PartStockListPage = () => {
+  const navigate = useNavigate();
   const { items, setItems } = useCRUD({
     initFormData: () => ({ ...initForms.partStock }),
   });
@@ -83,25 +86,26 @@ const PartStockListPage = () => {
   }, [safeCompleted, rcTerm]);
 
   return (
-    <div className="p-4 w-full bg-white">
-      <h2 className="text-2xl font-bold mb-3">부품 재고 현황</h2>
-      <button onClick={reloadAll} className="ml-auto border px-3 py-1 rounded">
-        {loading ? "새로고침..." : "새로고침"}
-      </button>
+    <div className="page-wrapper">
+      <BackButtonComponent text="< 이전페이지" onClick={() => navigate(-1)} />
+      <h2 style={{ textAlign: "center" }}>부품 재고 현황</h2>
+      
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={psQ}
           onChange={setPsQ}
           onDebounced={setPsTerm}
           delay={300}
           placeholder="재고 검색 (부품명/재고ID)"
-          className="border rounded px-3 py-2"
         />
+        <button onClick={reloadAll} className="refresh">
+        {loading ? "새로고침..." : "새로고침"}
+      </button>
       </div>
 
-      {/* 테이블 */}
-      <table className="w-full border-collapse border">
+      <div className="table-wrapper stock">
+        <table className="w-full border-collapse border">
         <thead>
           <tr className="bg-gray-100">
             {PartStockListArray.map((col) => (
@@ -144,21 +148,24 @@ const PartStockListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
 
       <h3 className="text-xl font-semibold mb-2">입고완료 리스트</h3>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={rcQ}
           onChange={setRcQ}
           onDebounced={setRcTerm}
           delay={300}
           placeholder="입고완료 검색 (거래처/부품명/발주번호)"
-          className="border rounded px-3 py-2"
         />
+        
       </div>
-
-      <table className="w-full border-collapse border">
+      
+      <div className="table-wrapper stock">
+            <table>
         <thead>
           <tr className="bg-gray-100">
             {partOrderArrays.map(col => (
@@ -200,6 +207,8 @@ const PartStockListPage = () => {
                 )}                
           </tbody>
       </table>
+      </div>
+      
     </div>
   );
 };

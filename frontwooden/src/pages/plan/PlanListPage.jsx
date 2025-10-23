@@ -13,10 +13,10 @@ import { PlanListArrays, initPlanForm } from "../../arrays/PlanArrays";
 import { getPlanList, createPlan, updatePlan, deletePlan } from "../../api/PlanListAPI";
 import { getItemList } from "../../api/ItemListAPI";
 import { patchPlanStatus } from "../../api/PlanListAPI.jsx";
+import { el } from "date-fns/locale";
 
-/* =========================
-          상수 & 유틸
-   ========================= */
+
+// 상수 & 유틸
 const PLAN_STATE_OPTS = ["생산중", "생산완료"];
 
 // 완료 값을 "생산완료"로 통일
@@ -33,9 +33,8 @@ const isDone = (row) => DONE_VALUES.has(String(row?.planState ?? "").trim());
 const getItemName = (row) =>
   row.itemName ?? row.itemNm ?? row.pname ?? row.name ?? "";
 
-/* =========================
-          컴포넌트
-   ========================= */
+
+// 컴포넌트
 const api = {
   getAll: getPlanList,
   create: createPlan,
@@ -128,23 +127,37 @@ const PlanListPage = () => {
   /* ---------- CRUD 래퍼 ---------- */
   const doCreate = async (e) => {
     stop(e);
-    await handleCreate();
-    await refetchPlans();
-    closeCreate();
+    const ok = await handleCreate();
+    if (ok) {
+      await refetchPlans();
+      closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
+    }    
   };
 
   const doUpdate = async (e) => {
     stop(e);
-    await handleUpdate();
-    await refetchPlans();
-    closeEdit();
+    const ok = await handleUpdate();
+    if (ok) {
+      await refetchPlans();
+      closeEdit();
+      alert("수정 완료");
+    } else {
+      alert("수정 실패");
+    }    
   };
 
   const doDelete = async (e) => {
     stop(e);
-    await handleDelete();
-    await refetchPlans();
-    closeEdit();
+    const ok = await handleDelete();
+    if (ok !== false) {
+      await refetchPlans();
+      closeEdit();
+    } else {
+      alert("삭제 실패");
+    }    
   };
 
   /* ---------- 상태 패치 (옵티미스틱 + 정규화) ---------- */
@@ -198,22 +211,22 @@ const PlanListPage = () => {
       <h2 style={{ textAlign: "center" }}>생산 리스트</h2>
 
       {/* 상단 툴바: 상품명 검색 + 새로고침 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
           onDebounced={setTerm}
           delay={300}
           minLength={0}
-          placeholder="상품명 검색"
+          placeholder="상품명"
           className="border rounded px-3 py-2"
         />
         
-        <ButtonComponent onClick={refetchPlans} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetchPlans} text="새로고침" cln="refresh" />
       </div>
 
-      {/* 테이블 */}
-      <table>
+      <div className="table-wrapper">
+        <table>
         <thead>
           <tr>
             {PlanListArrays.map((col) => (
@@ -224,22 +237,44 @@ const PlanListPage = () => {
         <tbody>
           {filtered && filtered.length > 0 ? (
             filtered.map((row) => (
-              <tr key={row.planNo} className="row" onClick={() => openEdit(row)}>
-                {PlanListArrays.map((col) =>
-                  col.clmn === "planState" ? (
-                    <td key={`${row.planNo}-${col.id}`}>
-                      <InlineSelectCell
-                        rowKey={row.planNo}
-                        value={row.planState ?? "생산중"}
-                        options={PLAN_STATE_OPTS}
-                        onPatch={onPatchPlanState}
-                        stopRowClick
+              <tr key={row.planNo} className="row">
+                {PlanListArrays.map((col) => {
+                  // 1 ) 상태 드롭다운 셀 (버블링 차단)
+                  if (col.clmn === "planState") {
+                    return (
+                      <td
+                        key={`${row.planNo}-${col.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <InlineSelectCell
+                          rowKey={row.planNo}
+                          value={row.planState ?? "생산중"}
+                          options={PLAN_STATE_OPTS}
+                          onPatch={onPatchPlanState}
+                          stopRowClick
                       />
                     </td>
-                  ) : (
-                    <td key={`${row.planNo}-${col.id}`}>{row[col.clmn]}</td>
-                  )
-                )}
+                    );
+                  }
+                  
+                  // 2 ) 상품명 클릭 시 수정폼 오픈
+                  if (col.clmn === "itemName") {
+                    return (
+                      <td
+                        key={`${row.planNo}-${col.id}`}
+                        style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
+                        onClick={() => openEdit(row)}
+                      >
+                        {row[col.clmn]}
+                      </td>
+                    );
+                  }
+                  return (
+                    <td key={`${row.planNo}-${col.id}`}>
+                      {row[col.clmn]}
+                    </td>
+                  );
+                })}
               </tr>
             ))
           ) : (
@@ -251,6 +286,8 @@ const PlanListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
 
       {/* 등록 */}
       <br />
@@ -263,12 +300,11 @@ const PlanListPage = () => {
         title="생산 등록"
         onConfirm={doCreate}
       >
-        <form onSubmit={e => e.preventDefault()}>
-          <PlanListForm formData={formData} onChange={handleChange} itemList={itemList} />
+          <PlanListForm formData={formData} onChange={handleChange} itemList={itemList}>
           <div className="btn-wrapper">
             <ButtonComponent text={"등록"} onClick={doCreate} cln="submit" />
           </div>
-        </form>
+          </PlanListForm>
       </ModalComponent>
 
       {/* 수정/삭제 모달 */}
@@ -279,13 +315,10 @@ const PlanListPage = () => {
         onConfirm={doUpdate}
       >
         {selectedItem && (
-          <form onSubmit={e => e.preventDefault()}>
-            <PlanListForm formData={formData} onChange={handleChange} itemList={itemList} />
-            <div className="btn-wrapper">
+            <PlanListForm formData={formData} onChange={handleChange} itemList={itemList}>
               <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />
               <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />
-            </div>
-          </form>
+            </PlanListForm>
         )}
       </ModalComponent>
     </div>

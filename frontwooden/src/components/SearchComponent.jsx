@@ -7,7 +7,7 @@ export default function SeachComponent ({
   onChange,                   // 입력값이 바뀔 때 즉시 통지
   onDebounced,                // 디바운스 후 서버 호출 등 실행
   delay = 300,                // 디바운스 ms (기본 300)
-  placeholder = "검색",       
+  placeholder,     
   minLength = 0,              // 설정 길이 미만이면 onDebounced 호출 안 함
   autoFocus = false,           
   className = "border rounded px-3 py-2 w-full",
@@ -44,6 +44,7 @@ export default function SeachComponent ({
       role="searchbox"
       aria-label="검색"
       value={val}
+      placeholder={placeholder}
       onChange={handleChange}
       autoFocus={autoFocus}
       className={className}
