@@ -7,12 +7,12 @@ export const OrderList = [
 
   export const BuyerList = [
     {id: 1, name:"구매거래처",path:'buyer/buyercustomer'},
-    {id: 2, name: "부품리스트", path:'buyer/partlist'},
+    {id: 2, name: "부품", path:'buyer/partlist'},
     {id: 3, name:"부품발주",path:"buyer/partorder"},
   ]
   export const PlanList = [
-    {id:1, name:"상품리스트",path:"plan/itemlist"},
-    {id:2, name:"생산리스트",path:"plan/planlist"},
+    {id:1, name:"상품",path:"plan/itemlist"},
+    {id:2, name:"생산",path:"plan/planlist"},
     {id:3, name:"BOM", path:"plan/bomlist"},
   ]
   export const StockList = [

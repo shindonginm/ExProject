@@ -38,26 +38,23 @@ public class OrderController {
             @RequestBody OrderRequestDto dto) {
         return orderService.update(orderNo, dto);
     }
-
-    // Order 상태 변경
+    // Order 상태 값 변경
     @PatchMapping("/{id}/status")
     public OrderResponseDto patchStatus(
             @PathVariable Long id,
             @RequestBody OrderStatusUpdateDto dto) {
         return orderService.updateStatus(id, dto);
     }
-
-    // 상태 완료 목록 (경로 중복 제거!)
+    // 완료된 Order 목록 조회
     @GetMapping("/completed")
     public List<OrderResponseDto> completed() {
         return orderService.getCompletedOrders();
     }
-
-    // 주문 삭제
+    // Order 삭제
     @DeleteMapping("/{orderNo}")
     public void deleteOrder(@PathVariable Long orderNo) {
         orderService.delete(orderNo);
     }
 }
 
-// 주문 CRUD + 상태변경 + 조건조회(회사명, 완료건)를 OrderService에 위임해 처리하는 REST 엔드포인트
+// Order CRUD + 상태변경 + 조건조회(회사명, 완료건)를 OrderService에 위임해 처리하는 REST 컨트롤러 서비스에 일을 시키는 포워더 역할만 수행

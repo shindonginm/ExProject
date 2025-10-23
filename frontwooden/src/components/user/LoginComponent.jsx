@@ -42,13 +42,14 @@ const LoginComponent = ({
 
   return(
     <div className="loginpage-wrapper">
+      <h1>LOGIN</h1>
       <form>
         {
             UserArrays.slice(1,3).map((list,idx) => (
                 <div key={idx}>
-                    <span>{list.name}</span>
                     <input type={list.type} 
                     name={list.value}
+                    placeholder={list.name}
                     value={loginParam[list.value] || ""}
                     onChange={(e) => 
                       handleChange(e)}
@@ -56,8 +57,20 @@ const LoginComponent = ({
                 </div>
             ))
         }
-        <ButtonComponent text={"로그인"} onClick={handleClickLogin}/>
-        <ButtonComponent text={"회원가입"} onClick={() => navigate("/join")}/>
+        <div>
+          <ButtonComponent 
+          text={"로그인"} 
+          onClick={handleClickLogin} 
+          type={"submit"}
+          cln="login"
+          />
+        <ButtonComponent 
+        text={"회원가입"} 
+        onClick={() => navigate("/join")}
+        cln="join"
+        />
+        </div>
+        
     </form>
     </div>
   )

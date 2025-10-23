@@ -12,5 +12,4 @@ export const LoginAPI = async(loginData) => {
     console.error("로그인 실패:", err);
     return { error: true };
   }
- 
 }

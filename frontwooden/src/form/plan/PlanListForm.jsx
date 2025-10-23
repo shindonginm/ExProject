@@ -6,7 +6,7 @@ import { PlanListArrays } from "../../arrays/PlanArrays";
  * - planState 는 "생산중" | "완료" 중 하나로만 제어
  * - 숫자 필드는 Number 변환
  */
-const PlanListForm = ({ formData, onChange, itemList }) => {
+const PlanListForm = ({ formData, onChange, itemList, children }) => {
   // 공통 변경 핸들러: Number 변환이 필요한 필드는 여기서 처리
   const handleChangeSmart = (e) => {
     const { name, value, type } = e.target;
@@ -76,6 +76,7 @@ const PlanListForm = ({ formData, onChange, itemList }) => {
           </p>
         </div>
       ))}
+      {children}
     </div>
   );
 };

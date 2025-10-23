@@ -73,31 +73,80 @@
       
     }, [itemList, term]);
 
+    // 목록 다시 불러오기
+    const refetch = async () => {
+      if (!api || typeof api.getAll !== "function") return;
+      const list = await api.getAll();
+      setItemList(Array.isArray(list) ? list : []);
+    };
+
+
+    // 기본 submit 방지
+    const stop = (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+    };
+
+    // CRUD 래퍼: 성공 시 재조회
+    const doCreate = async (e) => {
+      stop(e);
+      const ok = await handleCreate();
+      if (ok) {
+        await refetch();
+        closeCreate();
+        alert("등록 완료");
+      } else {
+        alert("등록 실패");
+      }
+    };
+
+    const doUpdate = async (e) => {
+      stop(e);
+      const ok = await handleUpdate();
+      if (ok) {
+        await refetch();
+        closeEdit();
+        alert("수정 완료");
+      } else {
+        alert("수정 실패");
+      } 
+    };
+
+    const doDelete = async (e) => {
+      stop(e);
+      const ok = await handleDelete();
+      if (ok !== false) {
+        await refetch();
+        closeEdit();
+      } else {
+        alert("삭제 실패");
+      }
+    };
+
     return (        // react의 화면을 렌더링하는 return부분
       <div className="page-wrapper">  {/* className="page-wrapper"(변경 XX) > 각자 페이지에 padding으로 여백을 조정하게 함*/}
         <BackButtonComponent text="< &nbsp;이전페이지" onClick={() => navigate(-1)} /> {/*이전페이지 버튼 사용*/}
         <h2 style={{ textAlign: "center" }}>상품 리스트</h2>     {/* 각자 페이지에 맞는 카테고리명을 h2안에 입력 */}
         
-        <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+        <div className="top-searchbar">
           <SearchComponent
             value={q}
             onChange={setQ}
             onDebounced={setTerm}    // 디바운스 후에만 필터 반영
             delay={300}
             minLength={0}
-            placeholder="검색"
+            placeholder="상품명"
             className="border rounded px-3 py-2"
           />
           <ButtonComponent onClick={async () => {
             const data = await getItemList();
-            setItemList(Array.isArray(data) ? data : [])}} text="새로고침" cln="submit" />
+            setItemList(Array.isArray(data) ? data : [])}} text="새로고침" cln="refresh" />
         </div>
 
 
 
-        {/* 테이블 */}
-        {/* 테이블 생성(구조는 같으니 변경 X ) */}
-        <table>
+        <div className="table-wrapper">
+              <table>
 
           {/* thead > table안에 컬럼을 감싸는 요소*/}
           <thead>
@@ -112,10 +161,16 @@
           <tbody>
             {filtered && filtered.length > 0 ? (  
               filtered.map((po) => (
-                <tr key={po.itemNo} className="row" onClick={() => openEdit(po)}>
+                <tr key={po.itemNo} className="row">
                   {ItemListArrays.map(col => (
-                    <td key={col.id} style={col.clmn === "itemCode" ? { color: "blue", textDecoration: "underline" } : {}}>
-                      {po[col.clmn]}
+                    <td 
+                      key={`${po.itemNo}-${col.id}`}
+                      style={col.clmn === "itemCode" ? 
+                        { color: "blue", textDecoration: "underline" } : {}
+                      }
+                      onClick={() => col.clmn === "itemCode" && openEdit(po)}  
+                    >
+                      {po[col.clmn] ?? ""}
                     </td>
                   ))}
                 </tr>
@@ -130,6 +185,8 @@
           </tbody>
         </table>
 
+        </div>
+        
         {/* 발주등록 버튼 */}
         <br />
         <ButtonComponent onClick={openCreate} text={"상품등록"} cln="submit" />
@@ -139,10 +196,14 @@
           isOpen={isCreateOpen}
           onClose={closeCreate}
           title="상품 등록"
-          onConfirm={handleCreate}
+          onConfirm={doCreate}
         >
-          <ItemListForm formData={formData} onChange={handleChange} onSubmit={handleCreate} />
-          <ButtonComponent text={"등록"} onClick={handleCreate} cln="submit" />
+          <ItemListForm 
+            formData={formData} 
+            onChange={handleChange} 
+            onSubmit={handleCreate} 
+          />
+          <ButtonComponent text={"등록"} onClick={doCreate} cln="submit" />
         </ModalComponent>
 
         {/* 수정/삭제 모달 */}
@@ -150,14 +211,17 @@
           isOpen={isEditOpen}
           onClose={closeEdit} 
           title="상품 수정/삭제"
-          onConfirm={handleUpdate}
+          onConfirm={doUpdate}
         >
           {selectedItem && (
             <>
-              <ItemListForm formData={formData} onChange={handleChange} onSubmit={handleUpdate}>
+              <ItemListForm 
+                formData={formData} 
+                onChange={handleChange} 
+                onSubmit={handleUpdate}>
               <div className="btn-wrapper">
-                <ButtonComponent text="수정" onClick={handleUpdate} cln="fixbtn" />
-                <ButtonComponent text="삭제" onClick={handleDelete} cln="delbtn" />              
+                <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />
+                <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />              
               </div>
               </ItemListForm>
             </>

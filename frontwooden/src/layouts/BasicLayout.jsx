@@ -5,7 +5,6 @@ import HeaderLayout from "./header/HeaderLayout";
 import GuideMenuLayout from "./header/GuideMenuLayout";
 import AsideLayout from "./aside/AsideLayout";
 import AsideComponent from "../components/AsideComponent";
-import { AuthRouter } from "../router/protected/AuthRouter";
 
 
 const BasicLayout = () => {
@@ -56,9 +55,7 @@ const BasicLayout = () => {
                 />
             </AsideLayout>
         <div className="main_body">
-            <AuthRouter>
-                <Outlet/>
-            </AuthRouter>            
+            <Outlet/>        
         </div>
         </div>
         </>

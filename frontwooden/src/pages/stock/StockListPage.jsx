@@ -7,6 +7,12 @@ import { PlanListArrays as CompletedPlanArrays } from "../../arrays/PlanArrays.j
 import BackButtonComponent from "../../components/BackButtonComponent.jsx";
 import ButtonComponent from "../../components/ButtonComponent.jsx";
 import SearchComponent from "../../components/SearchComponent.jsx";
+// swiper
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 
 const StockListPage = () => {
@@ -93,16 +99,15 @@ const StockListPage = () => {
       <h2 style={{ textAlign: "center" }}>현재/누적 재고</h2>
 
       {/* 상단 툴바 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
           onDebounced={setTerm}
           delay={300}
           placeholder="검색"
-          className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={reloadAll} text={loading ? "새로고침..." : "새로고침"} cln="submit" />
+        <ButtonComponent onClick={reloadAll} text={loading ? "새로고침..." : "새로고침"} cln="refresh" />
         <div style={{ marginLeft: "auto", fontWeight: 600 }}>
           현재재고 합: {isQty.toLocaleString()} &nbsp;/&nbsp;
           누적입고: {totalIn.toLocaleString()} &nbsp;/&nbsp;
@@ -110,8 +115,8 @@ const StockListPage = () => {
         </div>
       </div>
 
-      {/* 재고 표 */}
-      <table>
+      <div className="table-wrapper stock">
+        <table>
         <thead>
           <tr>
             {ItemStockColumns.map(({ id, label }) => (
@@ -123,7 +128,7 @@ const StockListPage = () => {
           {filtered.length ? (
             filtered.map(({ isNo, ...rest }) => (
               <tr key={isNo} className="row">
-                {ItemStockColumns.map(({ id, key, align = "left" }) => {
+                {ItemStockColumns.map(({ id, key, align = "right" }) => {
                   const val = rest[key];
                   return (
                     <td key={`${isNo}-${id}`} style={{ textAlign: align }}>
@@ -142,38 +147,38 @@ const StockListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
 
-      <hr className="my-6 opacity-30" />
 
       {/* 생산완료 리스트 */}
-      <h3 className="text-xl font-semibold mb-2">생산완료 리스트</h3>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <h3>생산완료 리스트</h3>
+      <div className="top-searchbar">
         <SearchComponent
           value={cpQ}
           onChange={setCpQ}
           onDebounced={setCpTerm}
           delay={300}
           placeholder="완료목록 검색 (품목명/코드/계획번호)"
-          className="border rounded px-3 py-2"
         />
       </div>
-
-      <table className="w-full border-collapse border">
+      <div className="table-wrapper stock">
+          <table>
         <thead>
-          <tr className="bg-gray-100">
+          <tr>
             {CompletedPlanArrays.map(({ clmn, content }) => (
-              <th key={clmn} className="border px-2 py-1">{content}</th>
+              <th key={clmn}>{content}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {filteredCompleted.length ? (
-            filteredCompleted.map((row) => (
-              <tr key={row.planNo}>
+            filteredCompleted.map(({ planNo, ...rest }) => (
+              <tr key={planNo}>
                 {CompletedPlanArrays.map(({ clmn }) => {
-                  const v = row?.[clmn];
+                  const v = rest[clmn];
                   return (
-                    <td key={`${row.planNo}-${clmn}`} className="border px-2 py-1">
+                    <td key={`${planNo}-${clmn}`}>
                       {typeof v === "number" ? Number(v).toLocaleString() : (v ?? "")}
                     </td>
                   );
@@ -182,13 +187,15 @@ const StockListPage = () => {
             ))
           ) : (
             <tr>
-              <td className="border px-2 py-6 text-center" colSpan={CompletedPlanArrays.length}>
+              <td colSpan={CompletedPlanArrays.length}>
                 생산완료 내역이 없습니다.
               </td>
             </tr>
           )}
         </tbody>
       </table>
+      </div>
+      
     </div>
   );
 };

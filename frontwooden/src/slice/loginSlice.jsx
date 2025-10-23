@@ -47,7 +47,7 @@ builder
         state.user = data.name || null;
         state.message = data.message;
 
-        // ✅ 쿠키 저장 시 문자열화 하지 말기
+        
         setCookie("member", {
         user: data.name,
         isLogin: true

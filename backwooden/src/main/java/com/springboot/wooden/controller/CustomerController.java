@@ -41,5 +41,4 @@ public class CustomerController {
     }
 }
 
-// Customer 에 대해 조회/등록/수정/삭제를 담당하는 REST 컨트롤러
-// URL은 /api/order/sellercustomer 로 정리돼 있고, 서비스에 일을 시키는 포워더 역할만 수행
+// Customer 에 대해 조회/등록/수정/삭제를 담당하는 REST 컨트롤러 서비스에 일을 시키는 포워더 역할만 수행

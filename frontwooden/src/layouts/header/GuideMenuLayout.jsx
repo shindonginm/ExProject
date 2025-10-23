@@ -3,17 +3,27 @@ import "../../components/Modal.scss";
 import CloseBtnComponent from "../../components/CloseBtnComponent";
 import { BuyerList, NavBar, OrderList, PlanList, StockList } from "../../arrays/MainArrays";
 import { Link } from "react-router-dom";
-import useCustomLogin from "../../hook/useCustomLogin";
+
+const site = [ "S","I","T","E",];
+const map = ["M","A","P"];
 
 const GuideMenuLayout = ({ openSideSet,setOpenSideSet }) => {
-  const { loginState } = useCustomLogin();
+
   return(
     <div className={"guidemenu-wrapper" + ( openSideSet ? " show":"")}>
       <div className="guidemenu-title">
-        WOODEN
+        {site.map(site => (
+          <span className={openSideSet ? "up":""}>{site}</span>
+        ))}
+        &nbsp;
+        {map.map(map => (
+          <span className={openSideSet ? "up":""}>{map}</span>
+        ))}
         <CloseBtnComponent style={{float:"right", height:"50px"}} onClose={() => setOpenSideSet(false)}/>
-      </div>
-
+    </div>
+    <div className={"linebar" + (openSideSet ? " set":"")}>
+      <span className={"linebar" + (openSideSet ? " set":"")}>{/*라인*/}</span>
+    </div>
     <div className="guidemenu-content">
         {NavBar.map(list => (
           <ul key={list.id} className={"guidemenu-lists"}>
@@ -22,7 +32,7 @@ const GuideMenuLayout = ({ openSideSet,setOpenSideSet }) => {
               <h3>ORDER</h3>
               {OrderList.map(li => (
                 <li key={li.id}>
-                  <Link to={li.path}>{li.name}</Link>
+                  <Link to={li.path} onClick={()=>setOpenSideSet(false)}>{li.name}</Link>
                 </li>
               ))}
             </>):
@@ -31,7 +41,7 @@ const GuideMenuLayout = ({ openSideSet,setOpenSideSet }) => {
               <h3>BUYER</h3>
               {BuyerList.map(li => (
                 <li key={li.id}>
-                  <Link to={li.path}>{li.name}</Link>
+                  <Link to={li.path} onClick={()=>setOpenSideSet(false)}>{li.name}</Link>
                 </li>
               ))}
             </>):
@@ -40,7 +50,7 @@ const GuideMenuLayout = ({ openSideSet,setOpenSideSet }) => {
               <h3>PLAN</h3>
               {PlanList.map(li => (
                 <li key={li.id}>
-                  <Link to={li.path}>{li.name}</Link>
+                  <Link to={li.path} onClick={()=>setOpenSideSet(false)}>{li.name}</Link>
                 </li>
               ))}
             </>):
@@ -48,7 +58,7 @@ const GuideMenuLayout = ({ openSideSet,setOpenSideSet }) => {
               <h3>STOCK</h3>
               {StockList.map(li => (
                 <li key={li.id}>
-                  <Link to={li.path}>{li.name}</Link>
+                  <Link to={li.path} onClick={()=>setOpenSideSet(false)}>{li.name}</Link>
                 </li>
               ))}
             </>)

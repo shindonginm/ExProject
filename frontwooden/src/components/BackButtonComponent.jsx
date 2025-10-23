@@ -1,12 +1,12 @@
-
+import './Modal.scss';
 
 const BackButtonComponent = ({onClick, text, type}) => {
   
   return(
-    <div>
+    <div className='backbtn-wrapper'>
       <button type={type}
       onClick={onClick}
-      className="back-button">
+      className="backbtn">
         {text}
       </button>
     </div>

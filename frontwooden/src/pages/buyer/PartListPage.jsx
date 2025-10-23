@@ -93,9 +93,38 @@ const PartListPage = () => {
     setPartList(Array.isArray(data) ? data : []);
   };
 
-  const doCreate = async (e) => { stop(e); await handleCreate(); await refetch(); closeCreate(); };
-  const doUpdate = async (e) => { stop(e); await handleUpdate(); await refetch(); closeEdit(); };
-  const doDelete = async (e) => { stop(e); await handleDelete(); await refetch(); closeEdit(); };
+  const doCreate = async (e) => {
+    stop(e); 
+    const ok = await handleCreate();
+    if (ok) {
+      await refetch();
+      closeCreate();
+      alert("등록 완료");
+    } else {
+      alert("등록 실패");
+    }
+  };
+  const doUpdate = async (e) => {
+    stop(e); 
+    const ok = await handleUpdate();
+    if (ok) {
+      await refetch(); 
+      closeEdit();
+      alert("수정 완료");
+    } else {
+      alert("수정 실패");
+    }
+  };
+  const doDelete = async (e) => { 
+    stop(e); 
+    const ok = await handleDelete();
+    if (ok !== false) {
+      await refetch();
+      closeEdit();
+    } else {
+      alert("삭제 실패");
+    }
+  };
 
   // 부품명으로 검색
   const getPartName = (row) =>
@@ -112,11 +141,13 @@ const PartListPage = () => {
 
   return (
     <div className="page-wrapper">
-      <BackButtonComponent text="< 이전페이지" onClick={() => navigate(-1)} />
+      <BackButtonComponent text="< 이전페이지" 
+      onClick={() => navigate(-1)} 
+      />
       <h2 style={{ textAlign: "center" }}>부품리스트</h2>
 
       {/* 상단 툴바: 부품명 검색 + 새로고침 */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
@@ -126,10 +157,11 @@ const PartListPage = () => {
           placeholder="부품명 검색"
           className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="refresh" />
       </div>
 
-      <table>
+      <div className="table-wrapper">
+          <table>
         <thead>
           <tr>
             {PartListArray.map((col) => (
@@ -165,6 +197,8 @@ const PartListPage = () => {
           )}
         </tbody>
       </table>
+      </div>
+      
       
       {/* 등록 버튼 */}
       <br/>
@@ -177,7 +211,6 @@ const PartListPage = () => {
         title="부품 등록"
         onConfirm={doCreate}
       >
-        <form onSubmit={stop}>
           <PartListForm
             formData={formData}
             onChange={handleChange}
@@ -186,7 +219,6 @@ const PartListPage = () => {
           >
             <ButtonComponent text={"등록"} onClick={doCreate} cln="submit" />
           </PartListForm>
-        </form>
       </ModalComponent>
 
       {/* 수정/삭제 모달 */}
@@ -197,19 +229,15 @@ const PartListPage = () => {
         onConfirm={doUpdate}
       >
         {selectedItem && (
-          <form onSubmit={stop}>
             <PartListForm
               formData={formData}
               onChange={handleChange}
               customer={customer}
               setCustomerId={setCustomerId}
             >
-              <div className="btn-wrapper">
                 <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />
                 <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />
-              </div>
             </PartListForm>
-          </form>
         )}
       </ModalComponent>
     </div>

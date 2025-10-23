@@ -4,13 +4,18 @@ import CloseBtnComponent from './CloseBtnComponent';
 const ModalComponent = ({onClose,isOpen,onConfirm,title,children}) => {
     
     return(
-        <div className={"modal"+ (isOpen ? " show":"")}>
+        <>
+            <div className={"back-modal"+ (isOpen ? " show":"")}></div>
+            <div className={"modal"+ (isOpen ? " show":"")}>
+            
             <CloseBtnComponent onClose={onClose}/>
             <div className="modal-wrapper">
-                <h2 className="modal-title">{title}</h2>
+                <h3 className="modal-title">{title}</h3>
                 {children}
             </div> 
         </div>
+        </>
+        
     )
 }
 export default ModalComponent;

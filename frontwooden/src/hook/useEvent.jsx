@@ -23,7 +23,7 @@ const useEvent = () => {
     "/plan/planlist": 3,
     "/plan/bomlist":3,
     "/stock/stocklist": 4,
-    "/stock/sellamount":4,
+    "/stock/partstock":4,
   };
 
     const asideGroups = {

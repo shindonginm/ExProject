@@ -276,19 +276,20 @@ const PartOrderListPage = () => {
     partMap,
   ]);
 
-  // 기본 submit 막기
+  // 기본 submit 방지
   const stop = (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
   };
 
+  // CRUD 래퍼: 성공 시 재조회
   const doCreate = async (e) => {
     stop(e);
     const ok = await handleCreate();
     if (ok) {
       await refetch();
       closeCreate();
-      alert("등록 완료!");
+      alert("등록 완료");
     } else {
       alert("등록 실패");
     }
@@ -300,7 +301,7 @@ const PartOrderListPage = () => {
     if (ok) {
       await refetch();
       closeEdit();
-      alert("수정 완료!");
+      alert("수정 완료");
     } else {
       alert("수정 실패");
     }
@@ -312,7 +313,6 @@ const PartOrderListPage = () => {
     if (ok !== false) {
       await refetch();
       closeEdit();
-      alert("삭제 완료!");
     } else {
       alert("삭제 실패");
     }
@@ -333,19 +333,20 @@ const PartOrderListPage = () => {
       <BackButtonComponent text="< 이전페이지" onClick={() => navigate(-1)} />
       <h2 style={{ textAlign: "center" }}>부품 발주</h2>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "8px 0" }}>
+      <div className="top-searchbar">
         <SearchComponent
           value={q}
           onChange={setQ}
           onDebounced={setTerm}
           delay={300}
-          placeholder="부품명 검색"
+          placeholder="부품명"
           className="border rounded px-3 py-2"
         />
-        <ButtonComponent onClick={refetch} text="새로고침" cln="submit" />
+        <ButtonComponent onClick={refetch} text="새로고침" cln="refresh" />
       </div>
 
-      <table>
+      <div className="table-wrapper">
+        <table>
         <thead>
           <tr>
             {partOrderArrays.map((c) => (
@@ -353,19 +354,17 @@ const PartOrderListPage = () => {
             ))}
           </tr>
         </thead>
-
         <tbody>
           {Array.isArray(filtered) && filtered.length > 0 ? (
             filtered.filter(Boolean).map((row) => (
-              // 1) 행 onClick 제거
               <tr key={row.poNo} className="row">
                 {partOrderArrays.map((c) => {
-                  // 2) 상태 드롭다운 셀
+                  // 1 ) poState 컬럼만 인라인 셀로 (버블링 차단)
                   if (c.clmn === "poState") {
                     const state = row?.poState || "입고대기";
                     return (
                       <td key={`${row.poNo}-${c.id}`} onClick={(e) => e.stopPropagation()}>
-                        <InlineSelectCell
+                        <InlineSelectCell 
                           rowKey={row?.poNo}
                           value={state}
                           options={PO_STATE_OPTS}
@@ -376,24 +375,21 @@ const PartOrderListPage = () => {
                     );
                   }
 
-                  // 3) 구매처명만 수정폼 오픈
+                  // 2 ) 구매처명만 클릭해서 수정 폼 오픈
                   if (c.clmn === "buyerComp") {
                     return (
-                      <td 
+                      <td
                         key={`${row.poNo}-${c.id}`}
-                        style={
-                          c.clmn === "buyerComp"
-                          ? { color: "blue", textDecoration: "underline", cursor: "pointer"}
-                          : {}
-                        }
-                        onClick={() => openEdit(row)}
+                        style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(row);
+                        }}
                       >
-                        {row.buyerComp}
+                        {row?.buyerComp ?? ""}
                       </td>
-                    );
+                    )
                   }
-
-                  // 4) 일반 셀
                   return (
                     <td key={`${row.poNo}-${c.id}`}>
                       {row?.[c.clmn] ?? ""}
@@ -410,8 +406,9 @@ const PartOrderListPage = () => {
             </tr>
           )}
         </tbody>
-
       </table>
+      </div>
+      
 
       <br />
       <ButtonComponent onClick={openCreate} text="발주 등록" cln="submit" />
@@ -423,7 +420,6 @@ const PartOrderListPage = () => {
         title="발주 등록"
         onConfirm={doCreate}
       >
-        <form onSubmit={stop}>
           <PartOrderForm
             formData={formData}
             onChange={handleChange}
@@ -435,7 +431,6 @@ const PartOrderListPage = () => {
           <div className="btn-wrapper" style={{ marginTop: 12 }}>
             <ButtonComponent text="등록" onClick={doCreate} cln="submit" />
           </div>
-        </form>
       </ModalComponent>
 
       {/* 수정/삭제 모달 */}
@@ -446,7 +441,6 @@ const PartOrderListPage = () => {
         onConfirm={doUpdate}
       >
         {selectedItem && (
-          <form onSubmit={stop}>
             <PartOrderForm
               formData={formData}
               onChange={handleChange}
@@ -454,12 +448,12 @@ const PartOrderListPage = () => {
               partOptions={filteredPartOptions}
               onSelectBuyer={onSelectBuyer}
               onSelectPart={onSelectPart}
-            />
+            >
             <div className="btn-wrapper" style={{ marginTop: 12 }}>
               <ButtonComponent text="수정" onClick={doUpdate} cln="fixbtn" />
               <ButtonComponent text="삭제" onClick={doDelete} cln="delbtn" />
             </div>
-          </form>
+            </PartOrderForm>
         )}
       </ModalComponent>
     </div>
