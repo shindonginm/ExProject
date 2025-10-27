@@ -1,3 +1,4 @@
+// src/main/java/com/springboot/wooden/controller/SalesController.java
 package com.springboot.wooden.controller;
 
 import com.springboot.wooden.service.SalesService;

@@ -1,3 +1,4 @@
+// backend/controller/ItemStockController.java
 package com.springboot.wooden.controller;
 
 import com.springboot.wooden.dto.ItemStockRequestDto;
