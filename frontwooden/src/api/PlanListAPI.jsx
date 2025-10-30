@@ -14,7 +14,6 @@ export const getPlanList = async () => {
   }
 };
 
-
 // 등록: 서버는 itemNo(숫자), planQty(숫자) 등만 받음
 export const createPlan = async (formData) => {
   const payload = {

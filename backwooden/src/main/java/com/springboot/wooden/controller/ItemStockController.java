@@ -1,4 +1,3 @@
-// backend/controller/ItemStockController.java
 package com.springboot.wooden.controller;
 
 import com.springboot.wooden.dto.ItemStockRequestDto;
@@ -9,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 
 /**
  * 재고(완제품) 조회/조정 컨트롤러

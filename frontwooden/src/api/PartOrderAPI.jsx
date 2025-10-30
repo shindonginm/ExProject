@@ -27,10 +27,6 @@ export const updatePartOrder = async (poNo, formData) => {
   return res.data;
 };
 
-// 상태 패치
-export const patchPartOrderState = (poNo, poState) =>
-  axios_api.patch(`${BASE_URL}/buyer/partorder/${poNo}/state`, {poState});
-
 // 삭제
 export const deletePartOrder = async (poNo) => {
   const res = await axios_api.delete(`${host}/${poNo}`);
