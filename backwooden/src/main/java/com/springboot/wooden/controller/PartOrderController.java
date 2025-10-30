@@ -22,11 +22,13 @@ public class PartOrderController {
     public List<PartOrderResponseDto> getAllPartOrders() {
         return partOrderService.getAll();
     }
+
     // PartOrder 완료 목록 조회 : 서비스에서 완료 목록 상태만 반환.
     @GetMapping("/completed")
     public List<PartOrderResponseDto> getCompletedPartOrders() {
         return partOrderService.getCompletedList();
     }
+
     // PartOrder 등록
     @PostMapping
     public ResponseEntity<PartOrderResponseDto> createPartOrder(@RequestBody @Valid PartOrderRequestDto dto) {
